@@ -7,12 +7,13 @@ import {
 	formatDuration,
 	formatInput,
 	formatWhen,
+	missionChoices,
+	missionSpeed,
 	parseDrive,
 	parseDuration,
 	parseWhen,
 	shipImage,
 	speedSteps,
-	universeFleetSpeed,
 } from './formulas';
 
 // A donut universe of 6 galaxies, fleet speed x3 at war (serverData as the
@@ -36,6 +37,7 @@ const form = (overrides = {}) => ({
 	target: '2:110:16',
 	shipId: 1, // Light Fighter
 	classKey: 'explorer',
+	mission: 'war',
 	drives: DRIVES,
 	...overrides,
 });
@@ -102,9 +104,22 @@ describe('universe and class', () => {
 		expect(speedSteps('general', { warriorBonusFleetHalfSpeed: 0 })).toHaveLength(10);
 	});
 
-	it('times with the war fleet speed of the universe', () => {
-		expect(universeFleetSpeed(UNIVERSE)).toBe(3);
-		expect(universeFleetSpeed({})).toBe(1);
+	it('reads the fleet speed of each mission', () => {
+		expect(missionSpeed(UNIVERSE, 'peaceful')).toBe(2);
+		expect(missionSpeed(UNIVERSE, 'war')).toBe(3);
+		expect(missionSpeed(UNIVERSE, 'holding')).toBe(1);
+		expect(missionSpeed({}, 'war')).toBe(1);
+	});
+
+	it('offers the missions only when their speeds differ', () => {
+		expect(missionChoices(UNIVERSE)).toEqual([
+			{ key: 'peaceful', speed: 2 },
+			{ key: 'war', speed: 3 },
+			{ key: 'holding', speed: 1 },
+		]);
+		const same = { speedFleetPeaceful: 2, speedFleetWar: 2, speedFleetHolding: 2 };
+		expect(missionChoices(same)).toEqual([]);
+		expect(missionChoices(undefined)).toEqual([]);
 	});
 
 	it('shows a ship by its game id', () => {
@@ -134,7 +149,7 @@ describe('universe and class', () => {
 describe('computeFlight', () => {
 	const drives = { combustion: 16, impulse: 13, hyperspace: 12 };
 
-	it('gives the duration at every speed, with the universe speed', () => {
+	it('gives the duration at every speed, with the mission speed', () => {
 		const result = computeFlight(form());
 		const distance = 2700 + 95 * 4;
 		const speed = Ogame.Fleets.getFleetSpeed([{ ship: Ogame.models.Destroyable[1], count: 1 }], drives);
@@ -144,6 +159,7 @@ describe('computeFlight', () => {
 		expect(result.rows).toHaveLength(10);
 		const d50 = Ogame.Fleets.getFlightTime(distance, speed, 50, 3);
 		expect(result.rows[5]).toEqual({ percent: 50, duration: d50, roundTrip: 2 * d50 });
+		expect(computeFlight(form({ mission: 'holding' })).universeSpeed).toBe(1);
 	});
 
 	it('goes round the edge of a donut universe', () => {

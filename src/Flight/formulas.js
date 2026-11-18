@@ -79,11 +79,26 @@ export function speedSteps(classKey, data) {
 	return Array.from({ length: 100 / step }, (_, i) => 100 - i * step);
 }
 
-// Fleet speed of the universe. The peaceful, war and holding speeds are the
-// same almost everywhere; the war one is kept, the fleet one times is mostly
-// an attack.
-export function universeFleetSpeed(data) {
-	return positive(data?.speedFleetWar, 1) || 1;
+// Universe fleet speed per kind of mission. Most universes use one speed for
+// all three; some fly faster at war, or slower when holding.
+export const MISSIONS = [
+	{ key: 'peaceful', setting: 'speedFleetPeaceful' },
+	{ key: 'war', setting: 'speedFleetWar' },
+	{ key: 'holding', setting: 'speedFleetHolding' },
+];
+// One mostly times an incoming attack.
+export const DEFAULT_MISSION = 'war';
+
+export function missionSpeed(data, missionKey) {
+	const mission = MISSIONS.find(({ key }) => key === missionKey) ?? MISSIONS[1];
+	return positive(data?.[mission.setting], 1) || 1;
+}
+
+// The missions with their speed, only when the universe tells them apart:
+// with one speed for all, the choice changes nothing and is not shown.
+export function missionChoices(data) {
+	const missions = MISSIONS.map(({ key }) => ({ key, speed: missionSpeed(data, key) }));
+	return new Set(missions.map(({ speed }) => speed)).size > 1 ? missions : [];
 }
 
 function isFlag(value) {
@@ -109,7 +124,7 @@ export function parseDrive(raw) {
 
 // `data` is a serverData payload; the rest is the form as typed. Returns
 // `{ ok: false, error }` so the view can explain what is missing.
-export function computeFlight({ data, origin, target, shipId, classKey, drives = {} }) {
+export function computeFlight({ data, origin, target, shipId, classKey, mission, drives = {} }) {
 	if (!data) return { ok: false, error: 'universe' };
 
 	const universe = universeShape(data);
@@ -135,7 +150,7 @@ export function computeFlight({ data, origin, target, shipId, classKey, drives =
 	const fleet = [{ ship, count: 1, speedBonus: classSpeedBonus(classKey, data, shipId) }];
 	const distance = Fleets.getDistance(from, to, universe);
 	const fleetSpeed = Fleets.getFleetSpeed(fleet, levels);
-	const speed = universeFleetSpeed(data);
+	const speed = missionSpeed(data, mission);
 
 	return {
 		ok: true,

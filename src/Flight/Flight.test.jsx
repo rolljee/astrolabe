@@ -56,6 +56,22 @@ describe('<Flight />', () => {
 		expect(await screen.findByText(/once both coordinates are filled in/)).toBeInTheDocument();
 	});
 
+	it('hides the mission when the universe has one fleet speed', async () => {
+		renderView(<Flight />, { lang: 'en' });
+		expect(await screen.findByText(/universe ×2/)).toBeInTheDocument();
+		expect(screen.queryByRole('group', { name: /^Mission/ })).not.toBeInTheDocument();
+	});
+
+	it('offers the mission with its speed when the universe has several', async () => {
+		const user = userEvent.setup();
+		fetchServerData.mockResolvedValue({ ...ASTRID, speedFleetWar: 3, speedFleetHolding: 1 });
+		renderView(<Flight />, { lang: 'fr' });
+		expect(await screen.findByRole('button', { name: 'Guerre ×3' })).toHaveAttribute('aria-pressed', 'true');
+		expect(screen.getByText(/univers ×3/)).toBeInTheDocument();
+		await user.click(screen.getByRole('button', { name: 'Pacifique ×2' }));
+		expect(screen.getByText(/univers ×2/)).toBeInTheDocument();
+	});
+
 	it('picks the slowest ship by its picture', async () => {
 		const user = userEvent.setup();
 		renderView(<Flight />, { lang: 'en' });

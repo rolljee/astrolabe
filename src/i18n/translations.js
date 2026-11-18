@@ -354,6 +354,14 @@ export const translations = {
 		'fl.class.general.hint': 'Combat, éclaireur et recycleur plus rapides ; vitesse par pas de 5 %',
 		'fl.class.explorer': 'Explorateur',
 		'fl.class.explorer.hint': 'Pas de bonus de vitesse de vol',
+		'fl.mission': 'Mission (vitesse de flotte de l’univers)',
+		'fl.mission.choice': '{mission} ×{speed}',
+		'fl.mission.peaceful': 'Pacifique',
+		'fl.mission.peaceful.hint': 'Transport, stationnement, expédition, exploitation, colonisation',
+		'fl.mission.war': 'Guerre',
+		'fl.mission.war.hint': 'Attaque, attaque groupée, espionnage, destruction',
+		'fl.mission.holding': 'Maintien',
+		'fl.mission.holding.hint': 'Stationner chez un allié',
 
 		'fl.step.drives': 'Propulsions',
 		'fl.step.drives.help':
@@ -853,6 +861,14 @@ export const translations = {
 		'fl.class.general.hint': 'Faster combat ships, Pathfinder and Recycler; speed in 5 % steps',
 		'fl.class.explorer': 'Discoverer',
 		'fl.class.explorer.hint': 'No flight speed bonus',
+		'fl.mission': 'Mission (universe fleet speed)',
+		'fl.mission.choice': '{mission} ×{speed}',
+		'fl.mission.peaceful': 'Peaceful',
+		'fl.mission.peaceful.hint': 'Transport, deployment, expedition, harvesting, colonisation',
+		'fl.mission.war': 'War',
+		'fl.mission.war.hint': 'Attack, ACS attack, espionage, moon destruction',
+		'fl.mission.holding': 'Holding',
+		'fl.mission.holding.hint': 'Hold at an ally’s',
 
 		'fl.step.drives': 'Drives',
 		'fl.step.drives.help':

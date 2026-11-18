@@ -5,7 +5,7 @@ import { fetchServerData } from '../api/ogame';
 import { useApiData } from '../api/useApiData';
 import { useUniverse } from '../universe/UniverseContext';
 import { Group, ToolGrid } from '../components/Layout';
-import { computeFlight, DEFAULT_CLASS, DEFAULT_SHIP, formatInput } from './formulas';
+import { computeFlight, DEFAULT_CLASS, DEFAULT_MISSION, DEFAULT_SHIP, formatInput, missionChoices } from './formulas';
 import RouteInput from './components/RouteInput';
 import FleetPicker from './components/FleetPicker';
 import DrivesInput from './components/DrivesInput';
@@ -23,6 +23,7 @@ function Flight() {
 	const [target, setTarget] = useState('1:1:1');
 	const [shipId, setShipId] = useState(DEFAULT_SHIP);
 	const [classKey, setClassKey] = useState(DEFAULT_CLASS);
+	const [mission, setMission] = useState(DEFAULT_MISSION);
 	const [drives, setDrives] = useState(NO_DRIVES);
 
 	// The clock starts on the current time, frozen until "Now" is pressed again.
@@ -34,8 +35,8 @@ function Flight() {
 	);
 
 	const result = useMemo(
-		() => computeFlight({ data, origin, target, shipId, classKey, drives }),
-		[data, origin, target, shipId, classKey, drives],
+		() => computeFlight({ data, origin, target, shipId, classKey, mission, drives }),
+		[data, origin, target, shipId, classKey, mission, drives],
 	);
 
 	return (
@@ -55,7 +56,15 @@ function Flight() {
 						<DrivesInput value={drives} onChange={setDrives} />
 					</Group>
 					<Group title={t('fl.step.fleet')} help={t('fl.step.fleet.help')}>
-						<FleetPicker shipId={shipId} onShipChange={setShipId} classKey={classKey} onClassChange={setClassKey} />
+						<FleetPicker
+							shipId={shipId}
+							onShipChange={setShipId}
+							classKey={classKey}
+							onClassChange={setClassKey}
+							missions={missionChoices(data)}
+							mission={mission}
+							onMissionChange={setMission}
+						/>
 					</Group>
 				</>
 			}

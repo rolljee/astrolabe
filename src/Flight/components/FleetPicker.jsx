@@ -56,8 +56,9 @@ function Choices({ label, options, value, onChange }) {
 }
 
 // The slowest ship sets the pace of the whole fleet; the class changes how
-// fast it goes.
-function FleetPicker({ shipId, onShipChange, classKey, onClassChange }) {
+// fast it goes, and so does the mission on a universe with several fleet
+// speeds (`missions` is empty otherwise).
+function FleetPicker({ shipId, onShipChange, classKey, onClassChange, missions = [], mission, onMissionChange }) {
 	const { t } = useI18n();
 
 	return (
@@ -73,6 +74,18 @@ function FleetPicker({ shipId, onShipChange, classKey, onClassChange }) {
 					hint: t(`fl.class.${key}.hint`),
 				}))}
 			/>
+			{missions.length > 0 && (
+				<Choices
+					label={t('fl.mission')}
+					value={mission}
+					onChange={onMissionChange}
+					options={missions.map(({ key, speed }) => ({
+						key,
+						text: t('fl.mission.choice', { mission: t(`fl.mission.${key}`), speed }),
+						hint: t(`fl.mission.${key}.hint`),
+					}))}
+				/>
+			)}
 		</div>
 	);
 }

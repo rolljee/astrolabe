@@ -8,7 +8,7 @@ web
 
 ## Users
 
-Active OGame players, mostly French-speaking, who keep OGame Tools open in a
+Active OGame players, mostly French-speaking, who keep Astrolabe open in a
 browser tab next to the game. They come in for a quick, precise answer in the
 middle of a play session: how much they get from a trade, whether a moonbreak is
 worth it, what an expedition will bring back, whether a moon spot is free, who a
@@ -66,8 +66,10 @@ Constraints:
 
 ## Brand Commitments
 
-- Name: "OGame Tools". It is fan-made and must say so; it links to OGame and is
-  not affiliated with Gameforge.
+- Name: "Astrolabe" (formerly "OGame Tools"), after the navigation instrument
+  that reckons positions and times. The name leaves out "OGame", a Gameforge
+  trademark; the tagline says what game it serves. It is fan-made and must say
+  so; it links to OGame and is not affiliated with Gameforge.
 - Voice: informal French ("tu"), plain and helpful. Jargon is fine where players
   use it, but every input is explained in one short sentence.
 - Has its own favicon and app icon (`public/`). They are not the author's blog

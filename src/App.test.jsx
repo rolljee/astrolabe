@@ -18,7 +18,7 @@ vi.mock('./api/ogame', () => ({
 describe('<App />', () => {
 	it('renders the shell and the calculator', () => {
 		renderWithI18n(<App />);
-		expect(screen.getByText('OGame Tools')).toBeInTheDocument();
+		expect(screen.getByText('Astrolabe')).toBeInTheDocument();
 		expect(screen.getByRole('main')).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: 'Deuterium' })).toBeInTheDocument();
 	});
@@ -32,11 +32,11 @@ describe('<App />', () => {
 	it('translates the whole page when the language changes', async () => {
 		const user = userEvent.setup();
 		renderWithI18n(<App />, { lang: 'en' });
-		expect(screen.getByText('Calculators for OGame')).toBeInTheDocument();
+		expect(screen.getByText('Calculators and universe data for OGame')).toBeInTheDocument();
 
 		await user.click(screen.getByRole('button', { name: 'FR' }));
 
-		expect(screen.getByText('Outils de calcul pour OGame')).toBeInTheDocument();
+		expect(screen.getByText('Calculs et données d’univers pour OGame')).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: 'Deutérium' })).toBeInTheDocument();
 	});
 
@@ -150,7 +150,7 @@ describe('<App />', () => {
 
 		await user.click(screen.getByRole('link', { name: 'Galaxy map' }));
 
-		expect(document.title).toBe('Galaxy map · OGame Tools');
+		expect(document.title).toBe('Galaxy map · Astrolabe');
 	});
 
 	it('keeps the explanation folded until asked for', async () => {

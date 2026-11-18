@@ -2,8 +2,9 @@
 
 export const MAX_POSITION = 15;
 
-// Accepts `1:2:3`, with or without spaces around the separators.
-export function parseCoordinates(raw, { galaxies, systems } = {}) {
+// Accepts `1:2:3`, with or without spaces around the separators. A fleet can
+// also fly to position 16, the expedition slot: pass `maxPosition` to allow it.
+export function parseCoordinates(raw, { galaxies, systems, maxPosition = MAX_POSITION } = {}) {
 	const parts = String(raw).trim().split(':');
 	if (parts.length !== 3) return null;
 
@@ -11,7 +12,7 @@ export function parseCoordinates(raw, { galaxies, systems } = {}) {
 	if (![galaxy, system, position].every((n) => Number.isInteger(n) && n > 0)) return null;
 	if (galaxies && galaxy > galaxies) return null;
 	if (systems && system > systems) return null;
-	if (position > MAX_POSITION) return null;
+	if (position > maxPosition) return null;
 
 	return { galaxy, system, position };
 }

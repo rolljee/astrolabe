@@ -1583,6 +1583,140 @@ input::placeholder {
 }
 
 // ---------------------------------------------------------------------------
+// Flight times
+// ---------------------------------------------------------------------------
+
+.fl-route,
+.fl-fleet {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.fl-fleet {
+	gap: 16px;
+}
+
+.fl-route .field-label svg {
+	color: var(--ink-3);
+}
+
+.fl-choice {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.fl-choice-title {
+	font-size: 13px;
+	font-weight: 400;
+	color: var(--ink-3);
+}
+
+.fl-drives {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+	gap: 12px;
+}
+
+.fl-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 15px;
+
+	th,
+	td {
+		padding: 2px 8px;
+		border-bottom: 1px solid var(--rule);
+		text-align: right;
+	}
+
+	thead th {
+		padding-bottom: 8px;
+		font-size: 14px;
+		font-weight: 700;
+		color: var(--ink-3);
+	}
+
+	tbody th {
+		font-family: var(--font-figure);
+		font-weight: 400;
+		color: var(--ink-2);
+		font-variant-numeric: tabular-nums;
+	}
+
+	tbody tr:last-child > * {
+		border-bottom: 0;
+	}
+}
+
+// A duration, clickable to feed the clock calculator.
+.fl-pick {
+	appearance: none;
+	min-height: 36px;
+	padding: 4px 8px;
+	border: 1px solid transparent;
+	border-radius: var(--radius);
+	background: transparent;
+	color: var(--ink);
+	font-family: var(--font-figure);
+	font-variant-numeric: tabular-nums;
+	cursor: pointer;
+
+	&:hover {
+		border-color: var(--rule-strong);
+		background: var(--sheet-2);
+	}
+
+	&.is-active {
+		border-color: var(--ink);
+		background: var(--sheet-3);
+		font-weight: 600;
+	}
+}
+
+.fl-clock {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.fl-clock-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 8px 12px;
+
+	> input {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.btn-quiet {
+		min-height: 40px;
+	}
+}
+
+.fl-clock-duration {
+	flex: 1;
+	min-width: 160px;
+}
+
+.fl-clock-result {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px 16px;
+
+	strong {
+		font-family: var(--font-figure);
+		font-size: 20px;
+		font-variant-numeric: tabular-nums;
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Players and alliances
 // ---------------------------------------------------------------------------
 

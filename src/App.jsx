@@ -7,6 +7,7 @@ import Trader from './Trader/Trader';
 import Moonbreak from './Moonbreak/Moonbreak';
 import Expeditions from './Expeditions/Expeditions';
 import MoonLock from './MoonLock/MoonLock';
+import Flight from './Flight/Flight';
 import Players from './Players/Players';
 import GalaxyMap from './GalaxyMap/GalaxyMap';
 import Alliances from './Alliances/Alliances';
@@ -34,6 +35,7 @@ const GROUPS = [
 				Component: Expeditions,
 			},
 			{ id: 'moonlock', labelKey: 'nav.moonlock', introKey: 'ml.intro', live: true, Component: MoonLock },
+			{ id: 'flight', labelKey: 'nav.flight', introKey: 'fl.intro', live: true, Component: Flight },
 			// The simulator waits for a way to read spy reports: its work in
 			// progress lives on the `feat/combat-sim-board` branch.
 			{ id: 'combat', labelKey: 'nav.combat', introKey: 'cs.intro', soon: true, Component: ComingSoon },

@@ -11,6 +11,7 @@ export const translations = {
 		'nav.moonbreak': 'Destruction de lune',
 		'nav.expeditions': 'Expéditions',
 		'nav.moonlock': 'Verrou de lune',
+		'nav.flight': 'Temps de vol',
 		'nav.combat': 'Simulateur de combat',
 		'nav.players': 'Joueurs',
 		'nav.galaxymap': 'Carte de la galaxie',
@@ -331,6 +332,74 @@ export const translations = {
 		'ml.error.data': 'Cet univers ne renvoie pas son taux de débris.',
 		'ml.error.coordinates': 'Entre des coordonnées valides pour voir le résultat.',
 
+		'fl.intro':
+			"Combien de temps met une flotte, la tienne ou celle d'en face, pour aller d'une position à une autre, à chaque palier de vitesse. Les vitesses de flotte et la forme (galaxies circulaires) viennent de l'univers choisi ; le calcul d'heure, en dessous, sert à caler un retour à la seconde.",
+
+		'fl.step.route': 'Trajet',
+		'fl.step.route.help':
+			'Les coordonnées de départ et d’arrivée. Colle-les depuis le jeu : les crochets disparaissent. La position 16 est celle des expéditions.',
+		'fl.origin': 'Départ',
+		'fl.target': 'Arrivée',
+		'fl.route.help': 'Format galaxie:système:position, par exemple 2:106:15.',
+		'fl.route.range': 'De 1:1:1 à {galaxies}:{systems}:{positions}.',
+
+		'fl.step.fleet': 'Flotte',
+		'fl.step.fleet.help':
+			"Le vaisseau le plus lent donne la vitesse de toute la flotte. La classe du joueur qui l'envoie peut l'accélérer ; le bonus de classe des formes de vie n'est pas compté, il ne se voit pas chez un autre joueur.",
+		'fl.ship': 'Vaisseau le plus lent',
+		'fl.class': 'Classe',
+		'fl.class.other': 'Autre',
+		'fl.class.other.hint': 'Explorateur ou sans classe : pas de bonus de vitesse',
+		'fl.class.collector': 'Collecteur',
+		'fl.class.collector.hint': 'Transporteurs plus rapides',
+		'fl.class.general': 'Général',
+		'fl.class.general.hint': 'Combat, éclaireur et recycleur plus rapides ; vitesse par pas de 5 %',
+		'fl.mission': 'Mission',
+		'fl.mission.peaceful': 'Pacifique',
+		'fl.mission.peaceful.hint': 'Transport, stationnement, expédition, exploitation, colonisation',
+		'fl.mission.war': 'Guerre',
+		'fl.mission.war.hint': 'Attaque, attaque groupée, espionnage, destruction',
+		'fl.mission.holding': 'Maintien',
+		'fl.mission.holding.hint': 'Stationner chez un allié',
+
+		'fl.step.drives': 'Propulsions',
+		'fl.step.drives.help':
+			"Les niveaux de propulsion du joueur qui envoie la flotte : les tiens, ou ceux d'un rapport d'espionnage. Laissé vide, un niveau compte pour 0.",
+		'fl.drive.combustion': 'Combustion',
+		'fl.drive.impulse': 'Impulsion',
+		'fl.drive.hyperspace': 'Hyperespace',
+		'fl.drives.range': 'De 0 à {max}.',
+
+		'fl.result.title': 'Durées de vol',
+		'fl.result.meta': 'Distance {distance} · vitesse {speed} · univers ×{universe}',
+		'fl.result.speed': 'Vitesse',
+		'fl.result.oneWay': 'Aller',
+		'fl.result.roundTrip': 'Aller-retour',
+		'fl.result.pick': 'Mettre dans le calcul d’heure',
+		'fl.result.hint': 'Un clic sur une durée la met dans le calcul d’heure.',
+
+		'fl.error.universe': 'Choisis un univers pour voir les durées.',
+		'fl.error.empty': 'Les durées s’affichent dès que le départ et l’arrivée sont remplis.',
+		'fl.error.origin': 'Départ illisible : écris des coordonnées comme 2:106:15.',
+		'fl.error.target': 'Arrivée illisible : écris des coordonnées comme 2:110:16.',
+		'fl.error.ship': 'Choisis le vaisseau le plus lent de la flotte.',
+		'fl.error.drive': 'Niveau de {drive} illisible.',
+
+		'fl.clock.title': 'Calcul d’heure',
+		'fl.clock.base': 'Heure',
+		'fl.clock.now': 'Maintenant',
+		'fl.clock.sign': 'Opération',
+		'fl.clock.add': '+ Ajouter',
+		'fl.clock.subtract': '− Retirer',
+		'fl.clock.duration': 'Durée',
+		'fl.clock.duration.placeholder': '2:30:00 ou 1j 2h',
+		'fl.clock.result': 'Résultat :',
+		'fl.clock.reuse': 'Reprendre comme heure',
+		'fl.clock.help':
+			"Colle l'heure du jeu (03.11.2026 21:45:12, ou juste 21:45:12 pour aujourd'hui) et une durée. Le calcul se fait à l'heure de ton appareil.",
+		'fl.clock.error.time': 'Heure illisible : écris par exemple 03.11.2026 21:45:12.',
+		'fl.clock.error.duration': 'Durée illisible : écris par exemple 1j 2h 30m, ou 2:30:00.',
+
 		'cs.intro':
 			"Simule le même combat des dizaines de fois et lis la moyenne : chances de victoire, pertes de chaque camp, défenses reconstruites, champ de débris, chances de lune et pillage. Cette première version tient compte des technologies de combat, pas encore des bonus de classe ni de formes de vie.",
 
@@ -455,6 +524,7 @@ export const translations = {
 		'nav.moonbreak': 'Moonbreak',
 		'nav.expeditions': 'Expeditions',
 		'nav.moonlock': 'Moon lock',
+		'nav.flight': 'Flight times',
 		'nav.combat': 'Combat simulator',
 		'nav.players': 'Players',
 		'nav.galaxymap': 'Galaxy map',
@@ -768,6 +838,74 @@ export const translations = {
 		'ml.error.universe': 'Pick a universe to see the result.',
 		'ml.error.data': 'This universe does not report its debris factor.',
 		'ml.error.coordinates': 'Enter valid coordinates to see the result.',
+
+		'fl.intro':
+			"How long a fleet, yours or the one coming at you, takes from one position to another, at every speed step. Fleet speeds and the universe shape (circular galaxies) come from the picked universe; the clock calculator below times a return to the second.",
+
+		'fl.step.route': 'Route',
+		'fl.step.route.help':
+			'The departure and arrival coordinates. Paste them from the game: the brackets go away. Position 16 is the expedition slot.',
+		'fl.origin': 'From',
+		'fl.target': 'To',
+		'fl.route.help': 'Format galaxy:system:position, for example 2:106:15.',
+		'fl.route.range': 'From 1:1:1 to {galaxies}:{systems}:{positions}.',
+
+		'fl.step.fleet': 'Fleet',
+		'fl.step.fleet.help':
+			"The slowest ship sets the speed of the whole fleet. The class of the player sending it can speed it up; the life form class upgrade is left out, it cannot be seen on another player.",
+		'fl.ship': 'Slowest ship',
+		'fl.class': 'Class',
+		'fl.class.other': 'Other',
+		'fl.class.other.hint': 'Discoverer or no class: no speed bonus',
+		'fl.class.collector': 'Collector',
+		'fl.class.collector.hint': 'Faster cargo ships',
+		'fl.class.general': 'General',
+		'fl.class.general.hint': 'Faster combat ships, Pathfinder and Recycler; speed in 5 % steps',
+		'fl.mission': 'Mission',
+		'fl.mission.peaceful': 'Peaceful',
+		'fl.mission.peaceful.hint': 'Transport, deployment, expedition, harvesting, colonisation',
+		'fl.mission.war': 'War',
+		'fl.mission.war.hint': 'Attack, ACS attack, espionage, moon destruction',
+		'fl.mission.holding': 'Holding',
+		'fl.mission.holding.hint': 'Hold at an ally’s',
+
+		'fl.step.drives': 'Drives',
+		'fl.step.drives.help':
+			"The drive levels of the player sending the fleet: yours, or those of a spy report. Left empty, a level counts as 0.",
+		'fl.drive.combustion': 'Combustion',
+		'fl.drive.impulse': 'Impulse',
+		'fl.drive.hyperspace': 'Hyperspace',
+		'fl.drives.range': 'From 0 to {max}.',
+
+		'fl.result.title': 'Flight times',
+		'fl.result.meta': 'Distance {distance} · speed {speed} · universe ×{universe}',
+		'fl.result.speed': 'Speed',
+		'fl.result.oneWay': 'One way',
+		'fl.result.roundTrip': 'Round trip',
+		'fl.result.pick': 'Use in the clock calculator',
+		'fl.result.hint': 'Click a duration to use it in the clock calculator.',
+
+		'fl.error.universe': 'Pick a universe to see the flight times.',
+		'fl.error.empty': 'The flight times show up once both coordinates are filled in.',
+		'fl.error.origin': 'Unreadable departure: write coordinates like 2:106:15.',
+		'fl.error.target': 'Unreadable arrival: write coordinates like 2:110:16.',
+		'fl.error.ship': 'Pick the slowest ship of the fleet.',
+		'fl.error.drive': 'Unreadable {drive} level.',
+
+		'fl.clock.title': 'Clock calculator',
+		'fl.clock.base': 'Time',
+		'fl.clock.now': 'Now',
+		'fl.clock.sign': 'Operation',
+		'fl.clock.add': '+ Add',
+		'fl.clock.subtract': '− Subtract',
+		'fl.clock.duration': 'Duration',
+		'fl.clock.duration.placeholder': '2:30:00 or 1d 2h',
+		'fl.clock.result': 'Result:',
+		'fl.clock.reuse': 'Use as the time',
+		'fl.clock.help':
+			'Paste the game time (03.11.2026 21:45:12, or just 21:45:12 for today) and a duration. The clock runs on your device time.',
+		'fl.clock.error.time': 'Unreadable time: write for example 03.11.2026 21:45:12.',
+		'fl.clock.error.duration': 'Unreadable duration: write for example 1d 2h 30m, or 2:30:00.',
 
 		'cs.intro':
 			'Simulate the same battle dozens of times and read the average: odds of winning, losses on each side, rebuilt defenses, debris field, moon chance and loot. This first version takes the combat technologies into account, not yet class or lifeform bonuses.',

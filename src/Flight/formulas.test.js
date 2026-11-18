@@ -7,11 +7,12 @@ import {
 	formatDuration,
 	formatInput,
 	formatWhen,
-	missionSpeed,
 	parseDrive,
 	parseDuration,
 	parseWhen,
+	shipImage,
 	speedSteps,
+	universeFleetSpeed,
 } from './formulas';
 
 // A donut universe of 6 galaxies, fleet speed x3 at war (serverData as the
@@ -34,8 +35,7 @@ const form = (overrides = {}) => ({
 	origin: '2:106:15',
 	target: '2:110:16',
 	shipId: 1, // Light Fighter
-	classKey: 'other',
-	mission: 'war',
+	classKey: 'explorer',
 	drives: DRIVES,
 	...overrides,
 });
@@ -96,17 +96,20 @@ describe('times and durations', () => {
 
 describe('universe and class', () => {
 	it('offers the speed steps of the class', () => {
-		expect(speedSteps('other', UNIVERSE)).toHaveLength(10);
+		expect(speedSteps('explorer', UNIVERSE)).toHaveLength(10);
 		expect(speedSteps('general', UNIVERSE)).toHaveLength(20);
 		expect(speedSteps('general', UNIVERSE).at(-1)).toBe(5);
 		expect(speedSteps('general', { warriorBonusFleetHalfSpeed: 0 })).toHaveLength(10);
 	});
 
-	it('reads the fleet speed of each mission', () => {
-		expect(missionSpeed(UNIVERSE, 'peaceful')).toBe(2);
-		expect(missionSpeed(UNIVERSE, 'war')).toBe(3);
-		expect(missionSpeed(UNIVERSE, 'holding')).toBe(1);
-		expect(missionSpeed({}, 'war')).toBe(1);
+	it('times with the war fleet speed of the universe', () => {
+		expect(universeFleetSpeed(UNIVERSE)).toBe(3);
+		expect(universeFleetSpeed({})).toBe(1);
+	});
+
+	it('shows a ship by its game id', () => {
+		expect(shipImage(8)).toBe('/ogame/ships/214.webp');
+		expect(shipImage(99)).toBeNull();
 	});
 
 	it('the Collector only speeds up the cargo ships', () => {
@@ -118,7 +121,7 @@ describe('universe and class', () => {
 		expect(classSpeedBonus('general', { warriorBonusFasterCombatShips: '0.5' }, 1)).toBe(0.5);
 		expect(classSpeedBonus('general', {}, 14)).toBe(1);
 		expect(classSpeedBonus('general', {}, 12)).toBe(0);
-		expect(classSpeedBonus('other', {}, 1)).toBe(0);
+		expect(classSpeedBonus('explorer', {}, 1)).toBe(0);
 	});
 
 	it('reads a drive level, empty counting as 0', () => {
@@ -131,13 +134,13 @@ describe('universe and class', () => {
 describe('computeFlight', () => {
 	const drives = { combustion: 16, impulse: 13, hyperspace: 12 };
 
-	it('gives the duration at every speed, with the mission speed', () => {
+	it('gives the duration at every speed, with the universe speed', () => {
 		const result = computeFlight(form());
 		const distance = 2700 + 95 * 4;
 		const speed = Ogame.Fleets.getFleetSpeed([{ ship: Ogame.models.Destroyable[1], count: 1 }], drives);
 		expect(result.ok).toBe(true);
 		expect(result.distance).toBe(distance);
-		expect(result.missionSpeed).toBe(3);
+		expect(result.universeSpeed).toBe(3);
 		expect(result.rows).toHaveLength(10);
 		const d50 = Ogame.Fleets.getFlightTime(distance, speed, 50, 3);
 		expect(result.rows[5]).toEqual({ percent: 50, duration: d50, roundTrip: 2 * d50 });

@@ -33,17 +33,37 @@ beforeEach(() => {
 
 async function fillRoute(user) {
 	// Pasted from the game, brackets included.
-	await user.click(screen.getByLabelText(/^From/));
+	await user.clear(screen.getByLabelText(/^From/));
 	await user.paste('[2:106:15]');
 	expect(screen.getByLabelText(/^From/)).toHaveValue('2:106:15');
+	await user.clear(screen.getByLabelText(/^To/));
 	await user.type(screen.getByLabelText(/^To/), '2:110:16');
 }
 
 describe('<Flight />', () => {
+	it('starts on 1:1:1 to 1:1:1, so the table shows at once', async () => {
+		renderView(<Flight />, { lang: 'en' });
+		expect(screen.getByLabelText(/^From/)).toHaveValue('1:1:1');
+		expect(screen.getByLabelText(/^To/)).toHaveValue('1:1:1');
+		expect(await screen.findByText(/Distance 5 /)).toBeInTheDocument();
+	});
+
 	it('asks for both coordinates before showing durations', async () => {
+		const user = userEvent.setup();
 		renderView(<Flight />, { lang: 'en' });
 		await waitFor(() => expect(fetchServerData).toHaveBeenCalled());
+		await user.clear(screen.getByLabelText(/^To/));
 		expect(await screen.findByText(/once both coordinates are filled in/)).toBeInTheDocument();
+	});
+
+	it('picks the slowest ship by its picture', async () => {
+		const user = userEvent.setup();
+		renderView(<Flight />, { lang: 'en' });
+		await waitFor(() => expect(fetchServerData).toHaveBeenCalled());
+		const probe = screen.getByRole('button', { name: 'Espionage Probe' });
+		expect(probe.querySelector('img')).toHaveAttribute('src', '/ogame/ships/210.webp');
+		await user.click(probe);
+		expect(probe).toHaveAttribute('aria-pressed', 'true');
 	});
 
 	it('lists a duration for every speed step', async () => {

@@ -4,7 +4,7 @@ import { groupDigits } from '../../components/format';
 import { formatDuration } from '../formulas';
 
 // Every speed step, one way and there and back. A click on a duration hands
-// it to the clock calculator below.
+// it to the clock calculator above.
 function FlightTimes({ result, picked, onPick }) {
 	const { t, lang } = useI18n();
 
@@ -21,7 +21,7 @@ function FlightTimes({ result, picked, onPick }) {
 		);
 	}
 
-	const { distance, fleetSpeed, missionSpeed, rows } = result;
+	const { distance, fleetSpeed, universeSpeed, rows } = result;
 
 	function cell(seconds) {
 		const text = formatDuration(seconds, lang);
@@ -48,29 +48,33 @@ function FlightTimes({ result, picked, onPick }) {
 					{t('fl.result.meta', {
 						distance: groupDigits(distance),
 						speed: groupDigits(fleetSpeed),
-						universe: missionSpeed,
+						universe: universeSpeed,
 					})}
 				</span>
 			</div>
 
-			<table className="fl-table">
-				<thead>
-					<tr>
-						<th scope="col">{t('fl.result.speed')}</th>
-						<th scope="col">{t('fl.result.oneWay')}</th>
-						<th scope="col">{t('fl.result.roundTrip')}</th>
-					</tr>
-				</thead>
-				<tbody>
-					{rows.map(({ percent, duration, roundTrip }) => (
-						<tr key={percent}>
-							<th scope="row">{percent} %</th>
-							{cell(duration)}
-							{cell(roundTrip)}
+			{/* The sheet pads its children with margins: a bare 100 % table would
+			    spill over the right edge. */}
+			<div className="fl-table-wrap">
+				<table className="fl-table">
+					<thead>
+						<tr>
+							<th scope="col">{t('fl.result.speed')}</th>
+							<th scope="col">{t('fl.result.oneWay')}</th>
+							<th scope="col">{t('fl.result.roundTrip')}</th>
 						</tr>
-					))}
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						{rows.map(({ percent, duration, roundTrip }) => (
+							<tr key={percent}>
+								<th scope="row">{percent} %</th>
+								{cell(duration)}
+								{cell(roundTrip)}
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
 
 			<p className="result-for">{t('fl.result.hint')}</p>
 		</div>

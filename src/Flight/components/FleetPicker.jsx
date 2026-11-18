@@ -1,7 +1,37 @@
 import React from 'react';
 import Ogame from 'ogamejs';
 import { useI18n } from '../../i18n/I18nContext';
-import { CLASSES, FLEET_SHIPS, MISSIONS, shipModel } from '../formulas';
+import { CLASSES, FLEET_SHIPS, shipImage, shipModel } from '../formulas';
+
+// The ships as the game draws them; the name of the picked one goes in the
+// title, the others in a tooltip.
+function ShipChoices({ label, value, onChange }) {
+	const { lang } = useI18n();
+	const name = (id) => Ogame.i18n.getName(shipModel(id), lang);
+
+	return (
+		<div className="fl-choice">
+			<h3 className="fl-choice-title">
+				{label} · <strong className="fl-ship-name">{name(value)}</strong>
+			</h3>
+			<div className="fl-ships" role="group" aria-label={label}>
+				{FLEET_SHIPS.map((id) => (
+					<button
+						key={id}
+						type="button"
+						className={`fl-ship ${id === value ? 'is-active' : ''}`}
+						aria-pressed={id === value}
+						aria-label={name(id)}
+						title={name(id)}
+						onClick={() => onChange(id)}
+					>
+						<img src={shipImage(id)} alt="" width="48" height="48" loading="lazy" />
+					</button>
+				))}
+			</div>
+		</div>
+	);
+}
 
 function Choices({ label, options, value, onChange }) {
 	return (
@@ -25,19 +55,14 @@ function Choices({ label, options, value, onChange }) {
 	);
 }
 
-// The slowest ship sets the pace of the whole fleet; the class and the kind of
-// mission change how fast it goes.
-function FleetPicker({ shipId, onShipChange, classKey, onClassChange, mission, onMissionChange }) {
-	const { t, lang } = useI18n();
+// The slowest ship sets the pace of the whole fleet; the class changes how
+// fast it goes.
+function FleetPicker({ shipId, onShipChange, classKey, onClassChange }) {
+	const { t } = useI18n();
 
 	return (
 		<div className="fl-fleet">
-			<Choices
-				label={t('fl.ship')}
-				value={shipId}
-				onChange={onShipChange}
-				options={FLEET_SHIPS.map((id) => ({ key: id, text: Ogame.i18n.getName(shipModel(id), lang) }))}
-			/>
+			<ShipChoices label={t('fl.ship')} value={shipId} onChange={onShipChange} />
 			<Choices
 				label={t('fl.class')}
 				value={classKey}
@@ -46,16 +71,6 @@ function FleetPicker({ shipId, onShipChange, classKey, onClassChange, mission, o
 					key,
 					text: t(`fl.class.${key}`),
 					hint: t(`fl.class.${key}.hint`),
-				}))}
-			/>
-			<Choices
-				label={t('fl.mission')}
-				value={mission}
-				onChange={onMissionChange}
-				options={MISSIONS.map(({ key }) => ({
-					key,
-					text: t(`fl.mission.${key}`),
-					hint: t(`fl.mission.${key}.hint`),
 				}))}
 			/>
 		</div>

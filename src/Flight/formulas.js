@@ -21,17 +21,10 @@ export const DEFAULT_SHIP = 8;
 export const MAX_FLIGHT_POSITION = 16;
 export const MAX_DRIVE_LEVEL = 40;
 
-export const CLASSES = ['other', 'collector', 'general'];
+export const CLASSES = ['collector', 'general', 'explorer'];
+// The Discoverer has no flight speed bonus: the neutral choice.
+export const DEFAULT_CLASS = 'explorer';
 export const DRIVES = ['combustion', 'impulse', 'hyperspace'];
-
-// Universe fleet speed per kind of mission.
-export const MISSIONS = [
-	{ key: 'peaceful', setting: 'speedFleetPeaceful' },
-	{ key: 'war', setting: 'speedFleetWar' },
-	{ key: 'holding', setting: 'speedFleetHolding' },
-];
-// One mostly times an incoming attack.
-export const DEFAULT_MISSION = 'war';
 
 // The Collector speeds up the cargo ships; the General the combat ships, the
 // Pathfinder and the Recycler (proxyforgame's list, as in Elmiral).
@@ -58,6 +51,12 @@ export function shipModel(id) {
 	return Destroyable[id];
 }
 
+// The in-game picture, by the game id of the ship (public/ogame/ships).
+export function shipImage(id) {
+	const ogameId = shipModel(id)?.ogameId;
+	return ogameId ? `${import.meta.env.BASE_URL}ogame/ships/${ogameId}.webp` : null;
+}
+
 // Class speed bonus of a ship, as a share of its base speed. The life form
 // class upgrade is left out: it cannot be seen on another player.
 export function classSpeedBonus(classKey, data, id) {
@@ -80,9 +79,26 @@ export function speedSteps(classKey, data) {
 	return Array.from({ length: 100 / step }, (_, i) => 100 - i * step);
 }
 
+// Universe fleet speed per kind of mission. Most universes use one speed for
+// all three; some fly faster at war, or slower when holding.
+export const MISSIONS = [
+	{ key: 'peaceful', setting: 'speedFleetPeaceful' },
+	{ key: 'war', setting: 'speedFleetWar' },
+	{ key: 'holding', setting: 'speedFleetHolding' },
+];
+// One mostly times an incoming attack.
+export const DEFAULT_MISSION = 'war';
+
 export function missionSpeed(data, missionKey) {
 	const mission = MISSIONS.find(({ key }) => key === missionKey) ?? MISSIONS[1];
 	return positive(data?.[mission.setting], 1) || 1;
+}
+
+// The missions with their speed, only when the universe tells them apart:
+// with one speed for all, the choice changes nothing and is not shown.
+export function missionChoices(data) {
+	const missions = MISSIONS.map(({ key }) => ({ key, speed: missionSpeed(data, key) }));
+	return new Set(missions.map(({ speed }) => speed)).size > 1 ? missions : [];
 }
 
 function isFlag(value) {
@@ -140,7 +156,7 @@ export function computeFlight({ data, origin, target, shipId, classKey, mission,
 		ok: true,
 		distance,
 		fleetSpeed,
-		missionSpeed: speed,
+		universeSpeed: speed,
 		rows: speedSteps(classKey, data).map((percent) => {
 			const duration = Fleets.getFlightTime(distance, fleetSpeed, percent, speed);
 			return { percent, duration, roundTrip: 2 * duration };

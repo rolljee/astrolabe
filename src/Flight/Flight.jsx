@@ -5,7 +5,7 @@ import { fetchServerData } from '../api/ogame';
 import { useApiData } from '../api/useApiData';
 import { useUniverse } from '../universe/UniverseContext';
 import { Group, ToolGrid } from '../components/Layout';
-import { computeFlight, DEFAULT_MISSION, DEFAULT_SHIP, formatInput } from './formulas';
+import { computeFlight, DEFAULT_CLASS, DEFAULT_MISSION, DEFAULT_SHIP, formatInput, missionChoices } from './formulas';
 import RouteInput from './components/RouteInput';
 import FleetPicker from './components/FleetPicker';
 import DrivesInput from './components/DrivesInput';
@@ -18,10 +18,11 @@ function Flight() {
 	const { t } = useI18n();
 	const { selection } = useUniverse();
 
-	const [origin, setOrigin] = useState('');
-	const [target, setTarget] = useState('');
+	// Filled in so the table shows up at once; the player types over them.
+	const [origin, setOrigin] = useState('1:1:1');
+	const [target, setTarget] = useState('1:1:1');
 	const [shipId, setShipId] = useState(DEFAULT_SHIP);
-	const [classKey, setClassKey] = useState('other');
+	const [classKey, setClassKey] = useState(DEFAULT_CLASS);
 	const [mission, setMission] = useState(DEFAULT_MISSION);
 	const [drives, setDrives] = useState(NO_DRIVES);
 
@@ -51,18 +52,19 @@ function Flight() {
 							data={data}
 						/>
 					</Group>
+					<Group title={t('fl.step.drives')} help={t('fl.step.drives.help')}>
+						<DrivesInput value={drives} onChange={setDrives} />
+					</Group>
 					<Group title={t('fl.step.fleet')} help={t('fl.step.fleet.help')}>
 						<FleetPicker
 							shipId={shipId}
 							onShipChange={setShipId}
 							classKey={classKey}
 							onClassChange={setClassKey}
+							missions={missionChoices(data)}
 							mission={mission}
 							onMissionChange={setMission}
 						/>
-					</Group>
-					<Group title={t('fl.step.drives')} help={t('fl.step.drives.help')}>
-						<DrivesInput value={drives} onChange={setDrives} />
 					</Group>
 				</>
 			}
@@ -74,12 +76,12 @@ function Flight() {
 							{t('srv.error.data')} <span className="api-error-detail">{error.message}</span>
 						</p>
 					)}
+					<ClockCalculator value={clock} onChange={setClock} />
 					<FlightTimes
 						result={result}
 						picked={clock.duration}
 						onPick={(duration) => setClock((value) => ({ ...value, duration }))}
 					/>
-					<ClockCalculator value={clock} onChange={setClock} />
 				</>
 			}
 		/>

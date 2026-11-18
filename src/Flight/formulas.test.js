@@ -7,10 +7,12 @@ import {
 	formatDuration,
 	formatInput,
 	formatWhen,
+	missionChoices,
 	missionSpeed,
 	parseDrive,
 	parseDuration,
 	parseWhen,
+	shipImage,
 	speedSteps,
 } from './formulas';
 
@@ -34,7 +36,7 @@ const form = (overrides = {}) => ({
 	origin: '2:106:15',
 	target: '2:110:16',
 	shipId: 1, // Light Fighter
-	classKey: 'other',
+	classKey: 'explorer',
 	mission: 'war',
 	drives: DRIVES,
 	...overrides,
@@ -96,7 +98,7 @@ describe('times and durations', () => {
 
 describe('universe and class', () => {
 	it('offers the speed steps of the class', () => {
-		expect(speedSteps('other', UNIVERSE)).toHaveLength(10);
+		expect(speedSteps('explorer', UNIVERSE)).toHaveLength(10);
 		expect(speedSteps('general', UNIVERSE)).toHaveLength(20);
 		expect(speedSteps('general', UNIVERSE).at(-1)).toBe(5);
 		expect(speedSteps('general', { warriorBonusFleetHalfSpeed: 0 })).toHaveLength(10);
@@ -109,6 +111,22 @@ describe('universe and class', () => {
 		expect(missionSpeed({}, 'war')).toBe(1);
 	});
 
+	it('offers the missions only when their speeds differ', () => {
+		expect(missionChoices(UNIVERSE)).toEqual([
+			{ key: 'peaceful', speed: 2 },
+			{ key: 'war', speed: 3 },
+			{ key: 'holding', speed: 1 },
+		]);
+		const same = { speedFleetPeaceful: 2, speedFleetWar: 2, speedFleetHolding: 2 };
+		expect(missionChoices(same)).toEqual([]);
+		expect(missionChoices(undefined)).toEqual([]);
+	});
+
+	it('shows a ship by its game id', () => {
+		expect(shipImage(8)).toBe('/ogame/ships/214.webp');
+		expect(shipImage(99)).toBeNull();
+	});
+
 	it('the Collector only speeds up the cargo ships', () => {
 		expect(classSpeedBonus('collector', {}, 12)).toBe(1);
 		expect(classSpeedBonus('collector', {}, 1)).toBe(0);
@@ -118,7 +136,7 @@ describe('universe and class', () => {
 		expect(classSpeedBonus('general', { warriorBonusFasterCombatShips: '0.5' }, 1)).toBe(0.5);
 		expect(classSpeedBonus('general', {}, 14)).toBe(1);
 		expect(classSpeedBonus('general', {}, 12)).toBe(0);
-		expect(classSpeedBonus('other', {}, 1)).toBe(0);
+		expect(classSpeedBonus('explorer', {}, 1)).toBe(0);
 	});
 
 	it('reads a drive level, empty counting as 0', () => {
@@ -137,10 +155,11 @@ describe('computeFlight', () => {
 		const speed = Ogame.Fleets.getFleetSpeed([{ ship: Ogame.models.Destroyable[1], count: 1 }], drives);
 		expect(result.ok).toBe(true);
 		expect(result.distance).toBe(distance);
-		expect(result.missionSpeed).toBe(3);
+		expect(result.universeSpeed).toBe(3);
 		expect(result.rows).toHaveLength(10);
 		const d50 = Ogame.Fleets.getFlightTime(distance, speed, 50, 3);
 		expect(result.rows[5]).toEqual({ percent: 50, duration: d50, roundTrip: 2 * d50 });
+		expect(computeFlight(form({ mission: 'holding' })).universeSpeed).toBe(1);
 	});
 
 	it('goes round the edge of a donut universe', () => {

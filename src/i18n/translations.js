@@ -333,7 +333,7 @@ export const translations = {
 		'ml.error.coordinates': 'Entre des coordonnées valides pour voir le résultat.',
 
 		'fl.intro':
-			"Combien de temps met une flotte, la tienne ou celle d'en face, pour aller d'une position à une autre, à chaque palier de vitesse. Les vitesses de flotte et la forme (galaxies circulaires) viennent de l'univers choisi ; le calcul d'heure, en dessous, sert à caler un retour à la seconde.",
+			"Combien de temps met une flotte, la tienne ou celle d'en face, pour aller d'une position à une autre, à chaque palier de vitesse. Les vitesses de flotte et la forme (galaxies circulaires) viennent de l'univers choisi ; le calcul d'heure, au-dessus des durées, sert à caler un retour à la seconde.",
 
 		'fl.step.route': 'Trajet',
 		'fl.step.route.help':
@@ -348,13 +348,14 @@ export const translations = {
 			"Le vaisseau le plus lent donne la vitesse de toute la flotte. La classe du joueur qui l'envoie peut l'accélérer ; le bonus de classe des formes de vie n'est pas compté, il ne se voit pas chez un autre joueur.",
 		'fl.ship': 'Vaisseau le plus lent',
 		'fl.class': 'Classe',
-		'fl.class.other': 'Autre',
-		'fl.class.other.hint': 'Explorateur ou sans classe : pas de bonus de vitesse',
 		'fl.class.collector': 'Collecteur',
 		'fl.class.collector.hint': 'Transporteurs plus rapides',
 		'fl.class.general': 'Général',
 		'fl.class.general.hint': 'Combat, éclaireur et recycleur plus rapides ; vitesse par pas de 5 %',
-		'fl.mission': 'Mission',
+		'fl.class.explorer': 'Explorateur',
+		'fl.class.explorer.hint': 'Pas de bonus de vitesse de vol',
+		'fl.mission': 'Mission (vitesse de flotte de l’univers)',
+		'fl.mission.choice': '{mission} ×{speed}',
 		'fl.mission.peaceful': 'Pacifique',
 		'fl.mission.peaceful.hint': 'Transport, stationnement, expédition, exploitation, colonisation',
 		'fl.mission.war': 'Guerre',
@@ -368,7 +369,6 @@ export const translations = {
 		'fl.drive.combustion': 'Combustion',
 		'fl.drive.impulse': 'Impulsion',
 		'fl.drive.hyperspace': 'Hyperespace',
-		'fl.drives.range': 'De 0 à {max}.',
 
 		'fl.result.title': 'Durées de vol',
 		'fl.result.meta': 'Distance {distance} · vitesse {speed} · univers ×{universe}',
@@ -840,7 +840,7 @@ export const translations = {
 		'ml.error.coordinates': 'Enter valid coordinates to see the result.',
 
 		'fl.intro':
-			"How long a fleet, yours or the one coming at you, takes from one position to another, at every speed step. Fleet speeds and the universe shape (circular galaxies) come from the picked universe; the clock calculator below times a return to the second.",
+			"How long a fleet, yours or the one coming at you, takes from one position to another, at every speed step. Fleet speeds and the universe shape (circular galaxies) come from the picked universe; the clock calculator, above the flight times, times a return to the second.",
 
 		'fl.step.route': 'Route',
 		'fl.step.route.help':
@@ -855,13 +855,14 @@ export const translations = {
 			"The slowest ship sets the speed of the whole fleet. The class of the player sending it can speed it up; the life form class upgrade is left out, it cannot be seen on another player.",
 		'fl.ship': 'Slowest ship',
 		'fl.class': 'Class',
-		'fl.class.other': 'Other',
-		'fl.class.other.hint': 'Discoverer or no class: no speed bonus',
 		'fl.class.collector': 'Collector',
 		'fl.class.collector.hint': 'Faster cargo ships',
 		'fl.class.general': 'General',
 		'fl.class.general.hint': 'Faster combat ships, Pathfinder and Recycler; speed in 5 % steps',
-		'fl.mission': 'Mission',
+		'fl.class.explorer': 'Discoverer',
+		'fl.class.explorer.hint': 'No flight speed bonus',
+		'fl.mission': 'Mission (universe fleet speed)',
+		'fl.mission.choice': '{mission} ×{speed}',
 		'fl.mission.peaceful': 'Peaceful',
 		'fl.mission.peaceful.hint': 'Transport, deployment, expedition, harvesting, colonisation',
 		'fl.mission.war': 'War',
@@ -875,7 +876,6 @@ export const translations = {
 		'fl.drive.combustion': 'Combustion',
 		'fl.drive.impulse': 'Impulse',
 		'fl.drive.hyperspace': 'Hyperspace',
-		'fl.drives.range': 'From 0 to {max}.',
 
 		'fl.result.title': 'Flight times',
 		'fl.result.meta': 'Distance {distance} · speed {speed} · universe ×{universe}',

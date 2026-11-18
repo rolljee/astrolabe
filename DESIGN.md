@@ -1,5 +1,5 @@
 ---
-name: OGame Tools
+name: Astrolabe
 description: A fan-made OGame toolbox where every tool hands down its verdict as a ruled report on a night-blue desk.
 colors:
   ground: "#0d1320"
@@ -253,7 +253,7 @@ components:
     height: "18px"
 ---
 
-# Design System: OGame Tools
+# Design System: Astrolabe
 
 ## Overview
 

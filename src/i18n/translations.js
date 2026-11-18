@@ -3,8 +3,8 @@
 
 export const translations = {
 	fr: {
-		'brand': 'OGame Tools',
-		'tagline': 'Outils de calcul pour OGame',
+		'brand': 'Astrolabe',
+		'tagline': 'Calculs et données d’univers pour OGame',
 
 		'nav.label': 'Outils',
 		'nav.trader': 'Commerce',
@@ -447,8 +447,8 @@ export const translations = {
 		'footer.support': 'Offre-moi un café',
 	},
 	en: {
-		'brand': 'OGame Tools',
-		'tagline': 'Calculators for OGame',
+		'brand': 'Astrolabe',
+		'tagline': 'Calculators and universe data for OGame',
 
 		'nav.label': 'Tools',
 		'nav.trader': 'Trade',

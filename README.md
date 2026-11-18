@@ -1,8 +1,10 @@
-# OGame Tools
+# Astrolabe
 
-Petit outil web (fan-made) pour OGame. Actuellement : un **calculateur de
-commerce** qui convertit une ressource (métal, cristal, deutérium) en les deux
-autres selon un taux d'échange et une répartition. Interface bilingue (FR / EN),
+Site (fan-made) de calculs et de données d'univers pour OGame, en ligne sur
+<https://ogame.rolljee.fr>. Anciennement « OGame Tools » ; le dépôt s'appelait
+`ogame-ui`. Calculs : commerce, destruction de lune, expéditions, verrou de
+lune ; données d'univers : joueurs, alliances, carte de la galaxie, réglages
+serveur. Interface bilingue (FR / EN),
 pensée pour être utilisable sans connaissance technique.
 
 Les calculs métier proviennent de la lib [`ogamejs`](https://www.npmjs.com/package/ogamejs).

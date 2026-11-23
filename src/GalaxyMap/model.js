@@ -183,6 +183,49 @@ export function findPlayer(players, query) {
 	return (players ?? []).find((player) => normalizeForSearch(player.name) === wanted) ?? null;
 }
 
+// The names offered under the "locate" field while a name is being typed:
+// names that start with what was typed first, then names that merely contain
+// it, each group in alphabetical order. Capped, so a two-letter query on a
+// ten-thousand-player universe does not drop a wall of names on the map.
+// `match` is where the typed text sits in the name, to underline it.
+export function suggestPlayers(players, query, limit = 8) {
+	const wanted = normalizeForSearch(String(query ?? '').trim());
+	if (!wanted) return [];
+
+	const starts = [];
+	const contains = [];
+	for (const player of players ?? []) {
+		const at = matchRange(player.name, wanted);
+		if (!at) continue;
+		(at.start === 0 ? starts : contains).push({ player, match: at });
+	}
+
+	const byName = (a, b) => a.player.name.localeCompare(b.player.name);
+	return [...starts.sort(byName), ...contains.sort(byName)].slice(0, limit);
+}
+
+// Where `wanted` (already normalised) sits in `name`, in the name's own
+// characters: normalising strips accents, so "é" may stand for "e" + a combining
+// mark, and the offsets of the normalised text are not those of the name.
+function matchRange(name, wanted) {
+	const chars = [...String(name)];
+	let normalized = '';
+	const origin = [];
+	chars.forEach((char, index) => {
+		const piece = normalizeForSearch(char);
+		normalized += piece;
+		for (let i = 0; i < piece.length; i += 1) origin.push(index);
+	});
+
+	const found = normalized.indexOf(wanted);
+	if (found === -1) return null;
+	const start = origin[found];
+	const end = origin[found + wanted.length - 1] + 1;
+	const before = chars.slice(0, start).join('');
+	const hit = chars.slice(start, end).join('');
+	return { start: before.length, end: before.length + hit.length };
+}
+
 // Where a player lives, as the map needs it: the systems to mark, each with the
 // positions held there, in galaxy order.
 export function playerSystems(player) {

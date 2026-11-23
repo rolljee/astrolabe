@@ -12,15 +12,27 @@ import { axisTicks, HEAT_BINS } from '../model';
 // so hovering and screen-reading say the same thing without a second DOM node
 // per cell, which matters at a few thousand of them.
 //
-// `marked` holds the "galaxy:system" keys of a located player: those cells get
-// a ring and the rest of the map steps back, so a handful of planets can be
-// spotted among a few thousand cells without losing the heat underneath.
-function HeatmapGrid({ map, metric, marked = null, selected, onSelect, shown = [], onToggleLevel }) {
+// `marks` maps the "galaxy:system" keys of the players put on the map to who
+// lives there ({ slot, name }): those cells get a ring and a dot in the
+// player's colour and the rest of the map steps back, so a handful of planets
+// can be spotted among a few thousand cells without losing the heat
+// underneath. A system several of them share gets a neutral ring and a dot
+// split between their colours.
+function markStyle(members) {
+	if (members.length === 1) return { '--gm-mark': `var(--gm-mark-${members[0].slot + 1})` };
+	const share = 100 / members.length;
+	const stops = members.map(
+		({ slot }, index) => `var(--gm-mark-${slot + 1}) ${index * share}% ${(index + 1) * share}%`,
+	);
+	return { '--gm-dot': `conic-gradient(${stops.join(', ')})` };
+}
+
+function HeatmapGrid({ map, metric, marks = null, selected, onSelect, shown = [], onToggleLevel }) {
 	const { t } = useI18n();
 	const ticks = axisTicks(map.systems);
 
 	return (
-		<div className={`gm-map${marked ? ' is-locating' : ''}`}>
+		<div className={`gm-map${marks ? ' is-locating' : ''}`}>
 			<div className="gm-scroll">
 				<div className="gm-rows">
 					{map.rows.map((row) => (
@@ -32,7 +44,9 @@ function HeatmapGrid({ map, metric, marked = null, selected, onSelect, shown = [
 										selected &&
 										selected.galaxy === cell.galaxy &&
 										selected.system === cell.system;
-									const isMarked = marked?.has(`${cell.galaxy}:${cell.system}`) ?? false;
+									const members = marks?.get(`${cell.galaxy}:${cell.system}`);
+									const isMarked = Boolean(members);
+									const isShared = isMarked && members.length > 1;
 									const base = t(`gm.cell.${metric}`, {
 										coords: `${cell.galaxy}:${cell.system}`,
 										planets: cell.planets,
@@ -40,14 +54,21 @@ function HeatmapGrid({ map, metric, marked = null, selected, onSelect, shown = [
 										inactive: cell.inactive,
 										moons: cell.moons,
 									});
-									const label = isMarked ? `${base} ${t('gm.cell.marked')}` : base;
+									const label = isMarked
+										? `${base} ${t('gm.cell.marked', {
+												names: members.map(({ name }) => name).join(', '),
+											})}`
+										: base;
 									return (
 										<button
 											key={cell.system}
 											type="button"
 											className={`gm-cell gm-level-${cell.level}${isSelected ? ' is-selected' : ''}${
 												shown.length && !shown.includes(cell.level) ? ' is-dimmed' : ''
-											}${isMarked ? ' is-marked' : ''}${marked && !isMarked ? ' is-faded' : ''}`}
+											}${isMarked ? ' is-marked' : ''}${isShared ? ' is-shared' : ''}${
+												marks && !isMarked ? ' is-faded' : ''
+											}`}
+											style={isMarked ? markStyle(members) : undefined}
 											aria-pressed={Boolean(isSelected)}
 											aria-label={label}
 											title={label}

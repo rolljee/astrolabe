@@ -248,3 +248,63 @@ export function playerSystems(player) {
 		.map((entry) => ({ ...entry, planets: entry.planets.sort((a, b) => a.position - b.position) }))
 		.sort((a, b) => a.galaxy - b.galaxy || a.system - b.system);
 }
+
+// How many players can be put on the map at once. Each one gets a colour of
+// its own (`--gm-mark-1` to `--gm-mark-5`), and past five the colours stop
+// being told apart on the heat ramp.
+export const MAX_COMPARED = 5;
+
+// The players put on the map, as `{ id, slot }`: the slot is the player's
+// colour. A newcomer takes the first free slot, so removing someone never
+// repaints the players left on the map.
+export function addCompared(list, id) {
+	if (list.some((entry) => entry.id === id) || list.length >= MAX_COMPARED) return list;
+	const taken = new Set(list.map(({ slot }) => slot));
+	let slot = 0;
+	while (taken.has(slot)) slot += 1;
+	return [...list, { id, slot }];
+}
+
+export function removeCompared(list, id) {
+	return list.filter((entry) => entry.id !== id);
+}
+
+// Everything the map needs to compare the players put on it:
+// - `tracks`, one per player still in the roster, with their systems;
+// - `marks`, who to draw in each "galaxy:system" cell, as `{ slot, name }`;
+// - `shared`, the systems where at least two of them live, in map order, each
+//   with who holds which positions there — the answer to "where do they meet".
+export function comparePlayers(players, compared) {
+	const byId = new Map((players ?? []).map((player) => [player.id, player]));
+	const tracks = compared
+		.map(({ id, slot }) => ({ player: byId.get(id), slot }))
+		.filter(({ player }) => player)
+		.map((track) => ({ ...track, systems: playerSystems(track.player) }));
+
+	const cells = new Map();
+	for (const { player, slot, systems } of tracks) {
+		for (const entry of systems) {
+			let cell = cells.get(entry.key);
+			if (!cell) {
+				cell = { key: entry.key, galaxy: entry.galaxy, system: entry.system, members: [] };
+				cells.set(entry.key, cell);
+			}
+			cell.members.push({ player, slot, planets: entry.planets });
+		}
+	}
+
+	const marks = new Map();
+	for (const cell of cells.values()) {
+		cell.members.sort((a, b) => a.slot - b.slot);
+		marks.set(
+			cell.key,
+			cell.members.map(({ slot, player }) => ({ slot, name: player.name })),
+		);
+	}
+
+	const shared = [...cells.values()]
+		.filter((cell) => cell.members.length > 1)
+		.sort((a, b) => a.galaxy - b.galaxy || a.system - b.system);
+
+	return { tracks, marks, shared };
+}

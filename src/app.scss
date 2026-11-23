@@ -66,6 +66,16 @@
 	--heat-6: #ebda70;
 	--heat-7: #ffffff;
 
+	// Players put on the galaxy map, one colour each. Brass first, as before
+	// there were several; then hues the heat ramp never takes (magenta, cyan,
+	// coral, lavender), each drawn over a sheet-coloured gap so it reads on
+	// every shade.
+	--gm-mark-1: #e0a43c;
+	--gm-mark-2: #ff5fd2;
+	--gm-mark-3: #3fd8ff;
+	--gm-mark-4: #ff5a4f;
+	--gm-mark-5: #b9a4ff;
+
 	--radius: 3px;
 
 	--font: 'Atkinson Hyperlegible Next', 'Segoe UI', system-ui, sans-serif;
@@ -2244,18 +2254,22 @@ input::placeholder {
 	background: var(--heat-7);
 }
 
-// A located player: the rest of the map steps back and their systems get a
-// ring with a dot, readable on every shade from the darkest to white.
+// Players put on the map: the rest of the map steps back and their systems get
+// a ring with a dot in their colour, readable on every shade from the darkest
+// to white. A system several of them share gets an ink ring and a bigger dot
+// split between their colours.
 .gm-cell.is-faded:not(.is-selected) {
 	opacity: 0.35;
 }
 
 .gm-cell.is-marked {
+	--gm-mark: var(--gm-mark-1);
+
 	z-index: 1;
 	border-color: var(--sheet);
 	box-shadow:
-		0 0 0 2px var(--signal),
-		0 0 10px 2px var(--signal-line);
+		0 0 0 2px var(--gm-mark),
+		0 0 10px 2px color-mix(in srgb, var(--gm-mark) 40%, transparent);
 
 	&::after {
 		content: '';
@@ -2265,9 +2279,18 @@ input::placeholder {
 		width: 7px;
 		height: 7px;
 		border-radius: 50%;
-		background: var(--signal);
+		background: var(--gm-dot, var(--gm-mark));
 		box-shadow: 0 0 0 1.5px var(--sheet);
 		transform: translate(-50%, -50%);
+	}
+
+	&.is-shared {
+		--gm-mark: var(--ink);
+
+		&::after {
+			width: 9px;
+			height: 9px;
+		}
 	}
 }
 
@@ -2439,11 +2462,32 @@ input::placeholder {
 }
 
 .gm-locator-marker {
+	--gm-mark: var(--gm-mark-1);
+
+	flex: none;
 	width: 10px;
 	height: 10px;
 	border-radius: 50%;
-	background: var(--signal);
-	box-shadow: 0 0 0 2px var(--signal-line);
+	background: var(--gm-mark);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--gm-mark) 40%, transparent);
+
+	&.is-small {
+		width: 7px;
+		height: 7px;
+		margin: 0 2px 0 4px;
+		box-shadow: none;
+	}
+}
+
+.gm-locator-remove {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px;
+}
+
+.gm-locator-shared {
+	padding-top: 8px;
+	border-top: 1px solid var(--rule);
 }
 
 .gm-locator-systems {

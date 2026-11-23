@@ -4,7 +4,11 @@ import {
 	axisTicks,
 	buildHeatmap,
 	describeSystem,
+	addCompared,
+	comparePlayers,
 	findPlayer,
+	MAX_COMPARED,
+	removeCompared,
 	heatLevel,
 	HEAT_LEVELS,
 	playerSystems,
@@ -179,5 +183,57 @@ describe('playerSystems', () => {
 
 	it('is empty without a player', () => {
 		expect(playerSystems(null)).toEqual([]);
+	});
+});
+
+describe('addCompared / removeCompared', () => {
+	it('gives each player the first free colour and keeps the others', () => {
+		let list = addCompared([], 'a');
+		list = addCompared(list, 'b');
+		list = addCompared(list, 'b');
+		expect(list).toEqual([
+			{ id: 'a', slot: 0 },
+			{ id: 'b', slot: 1 },
+		]);
+		list = addCompared(removeCompared(list, 'a'), 'c');
+		expect(list).toEqual([
+			{ id: 'b', slot: 1 },
+			{ id: 'c', slot: 0 },
+		]);
+	});
+
+	it('stops at MAX_COMPARED', () => {
+		let list = [];
+		for (let i = 0; i < MAX_COMPARED + 2; i += 1) list = addCompared(list, String(i));
+		expect(list).toHaveLength(MAX_COMPARED);
+	});
+});
+
+describe('comparePlayers', () => {
+	const players = [
+		{ id: '1', name: 'Ann', planets: [{ coords: '1:5:4', moon: false }, { coords: '2:9:1', moon: true }] },
+		{ id: '2', name: 'Bob', planets: [{ coords: '1:5:10', moon: false }] },
+		{ id: '3', name: 'Cid', planets: [{ coords: '3:1:1', moon: false }] },
+	];
+
+	it('marks every system and lists the shared ones with who holds what', () => {
+		const { tracks, marks, shared } = comparePlayers(players, [
+			{ id: '2', slot: 1 },
+			{ id: '1', slot: 0 },
+			{ id: 'gone', slot: 2 },
+		]);
+		expect(tracks.map(({ player }) => player.name)).toEqual(['Bob', 'Ann']);
+		expect(marks.get('1:5')).toEqual([
+			{ slot: 0, name: 'Ann' },
+			{ slot: 1, name: 'Bob' },
+		]);
+		expect(marks.get('2:9')).toEqual([{ slot: 0, name: 'Ann' }]);
+		expect(marks.has('3:1')).toBe(false);
+		expect(shared.map(({ key }) => key)).toEqual(['1:5']);
+		expect(shared[0].members.map(({ planets }) => planets[0].position)).toEqual([4, 10]);
+	});
+
+	it('is empty when nobody is compared', () => {
+		expect(comparePlayers(players, [])).toMatchObject({ tracks: [], shared: [] });
 	});
 });

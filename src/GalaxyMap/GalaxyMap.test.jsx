@@ -166,7 +166,7 @@ describe('<GalaxyMap />', () => {
 		renderView(<GalaxyMap />, { lang: 'en' });
 		await screen.findByLabelText(/^1:1 —/);
 
-		const field = screen.getByRole('combobox', { name: 'Locate a player' });
+		const field = screen.getByRole('combobox', { name: 'Locate players' });
 		// Nothing is suggested before typing.
 		await user.click(field);
 		expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
@@ -182,25 +182,61 @@ describe('<GalaxyMap />', () => {
 		expect(options.map((option) => option.textContent)).toEqual(['Élysée[TWA]', 'Elysium']);
 
 		await user.keyboard('{ArrowDown}{Enter}');
-		expect(field).toHaveValue('Élysée');
+		// Picking puts the player on the map and frees the field for the next one.
+		expect(field).toHaveValue('');
 		expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
 
 		expect(cell('1:1')).toHaveClass('is-marked');
+		expect(cell('1:1')).toHaveAccessibleName(/home of Élysée$/);
 		expect(cell('2:3')).toHaveClass('is-faded');
 		expect(screen.getByText('2 planet(s) in 1 system(s)')).toBeInTheDocument();
 
 		await user.click(screen.getByRole('button', { name: /^1:1\s*:4/ }));
 		expect(screen.getByText('System 1:1')).toBeInTheDocument();
 
-		await user.click(screen.getByRole('button', { name: /Clear/ }));
+		await user.click(screen.getByRole('button', { name: 'Remove Élysée from the map' }));
 		expect(cell('1:1')).not.toHaveClass('is-marked');
 		expect(cell('2:3')).not.toHaveClass('is-faded');
 
 		// Picking with the mouse works the same way.
 		await user.type(field, 'sleep');
 		await user.click(screen.getByRole('option', { name: 'Sleeper' }));
-		expect(field).toHaveValue('Sleeper');
 		expect(cell('2:3')).toHaveClass('is-marked');
+	});
+
+	it('compares several players, each in their own colour', async () => {
+		const user = userEvent.setup();
+		renderView(<GalaxyMap />, { lang: 'en' });
+		await screen.findByLabelText(/^1:1 —/);
+
+		const field = screen.getByRole('combobox', { name: 'Locate players' });
+		await user.type(field, 'sleeper{Enter}');
+		expect(cell('2:3')).toHaveClass('is-marked');
+		expect(cell('2:3').style.getPropertyValue('--gm-mark')).toBe('var(--gm-mark-1)');
+
+		await user.type(field, 'elysium{Enter}');
+		expect(cell('1:1').style.getPropertyValue('--gm-mark')).toBe('var(--gm-mark-2)');
+		// Nobody shares a system yet.
+		expect(screen.getByText(/none: these players share no system/)).toBeInTheDocument();
+
+		// A player already on the map is not offered again.
+		await user.type(field, 'elysium');
+		expect(screen.getByText('That player is already on the map.')).toBeInTheDocument();
+		await user.clear(field);
+
+		await user.type(field, 'élysée{Enter}');
+		expect(cell('1:1')).toHaveClass('is-shared');
+		expect(cell('1:1')).toHaveAccessibleName(/home of Elysium, Élysée$/);
+		expect(cell('2:3')).toHaveClass('is-marked');
+		expect(screen.getByText('1 system(s) home to several of these players')).toBeInTheDocument();
+
+		// Removing a player keeps the colours of the others.
+		await user.click(screen.getByRole('button', { name: 'Remove Sleeper from the map' }));
+		expect(cell('2:3')).toHaveClass('is-faded');
+		expect(cell('1:1')).toHaveClass('is-shared');
+
+		await user.click(screen.getByRole('button', { name: /Remove everyone/ }));
+		expect(cell('1:1')).not.toHaveClass('is-marked');
 	});
 
 	it('still draws the map when the universe size is unavailable', async () => {

@@ -5,8 +5,9 @@ import { useI18n } from '../../i18n/I18nContext';
 import StatusBadges from '../../components/StatusBadges';
 
 // Who lives in the system a cell points at. The map answers "where", this
-// answers "who" — the reason a cell is worth clicking at all.
-function SystemDetail({ system, rows }) {
+// answers "who" — the reason a cell is worth clicking at all. The players put
+// on the map (`slots`, id → colour) carry their colour dot here too.
+function SystemDetail({ system, rows, slots = new Map() }) {
 	const { t } = useI18n();
 
 	if (!system) {
@@ -35,6 +36,13 @@ function SystemDetail({ system, rows }) {
 					{rows.map((row) => (
 						<li key={row.id} className="gm-detail-row">
 							<span className="gm-detail-position">{row.position}</span>
+							{slots.has(row.player.id) && (
+								<span
+									className="gm-locator-marker"
+									style={{ '--gm-mark': `var(--gm-mark-${slots.get(row.player.id) + 1})` }}
+									aria-hidden="true"
+								/>
+							)}
 							<span className="gm-detail-name">{row.player.name}</span>
 							{row.player.alliance && (
 								<span className="pl-row-alliance">[{row.player.alliance.tag}]</span>

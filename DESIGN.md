@@ -39,6 +39,11 @@ colors:
   heat-5: "#89c339"
   heat-6: "#ebda70"
   heat-7: "#ffffff"
+  gm-mark-1: "#e0a43c"
+  gm-mark-2: "#ff5fd2"
+  gm-mark-3: "#3fd8ff"
+  gm-mark-4: "#ff5a4f"
+  gm-mark-5: "#b9a4ff"
 typography:
   display:
     fontFamily: "Atkinson Hyperlegible Next, Segoe UI, system-ui, sans-serif"
@@ -302,6 +307,7 @@ A night-blue desk with a warm off-white ink and one brass accent; every other hu
 - **Ink Two** (ink-2): secondary text, labels, inactive controls.
 - **Ink Three** (ink-3): metadata, placeholders, ticks, column heads.
 - **Heat ramp** (heat-0 to heat-7): night blue for empty, then violet, blue, teal, green, lime, sand and white for a full system (15 planets), rising in value, so crowded systems on the galaxy map are the bright ones. The hue turns because a single blue ramp read as blue on blue against the night-blue sheet.
+- **Player marks** (gm-mark-1 to gm-mark-5): up to five players put on the galaxy map, one colour each, as a 2px ring and a dot over a sheet-coloured gap. The first is brass (one located player is "where you are looking"); the others take hues the heat ramp never reaches: magenta, cyan, coral, lavender. A system several of them share gets an ink ring and a dot split between their colours.
 
 ### Named Rules
 **The Brass Reservation Rule.** Brass means "this is the answer, this has focus, or this is where you are." It marks the verdict figures that have no meaning ink, focus, the open tool, the selected heatmap cell, the curve's current point and the wash under the curve. Never use it for decoration, hover or headings.

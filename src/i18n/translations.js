@@ -268,6 +268,14 @@ export const translations = {
 		'gm.detail.empty': 'Personne dans ce système.',
 		'gm.detail.moon': 'Lune',
 
+		'gm.player.label': 'Situer un joueur',
+		'gm.player.placeholder': 'Nom exact du joueur',
+		'gm.player.clear': 'Effacer',
+		'gm.player.none': 'Aucun joueur de ce nom dans cet univers.',
+		'gm.player.unplaced': "pas encore placé sur la carte (l'annuaire a quelques jours de retard)",
+		'gm.player.summary': '{planets} planète(s) dans {systems} système(s)',
+		'gm.cell.marked': '— planète du joueur situé',
+
 		'al.intro':
 			"Cherche une alliance par son nom ou son tag pour voir son effectif complet : chaque membre avec son statut, le fondateur, et la part de l'alliance encore active.",
 
@@ -775,6 +783,14 @@ export const translations = {
 		'gm.detail.system': 'System {coords}',
 		'gm.detail.empty': 'Nobody in this system.',
 		'gm.detail.moon': 'Moon',
+
+		'gm.player.label': 'Locate a player',
+		'gm.player.placeholder': "Player's exact name",
+		'gm.player.clear': 'Clear',
+		'gm.player.none': 'No player by that name in this universe.',
+		'gm.player.unplaced': 'not on the map yet (the roster lags a few days behind)',
+		'gm.player.summary': '{planets} planet(s) in {systems} system(s)',
+		'gm.cell.marked': "— located player's planet",
 
 		'al.intro':
 			'Search an alliance by name or tag to see its full roster: every member with their status, the founder, and how much of the alliance is still active.',

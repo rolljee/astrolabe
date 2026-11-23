@@ -9,6 +9,7 @@
 
 import { formatCoordinates, galaxyUrl, parseCoordinates } from '../components/galaxy';
 import { filterByStatus } from '../components/status';
+import { normalizeForSearch } from '../components/search';
 
 // What the colour of a cell counts. Planets say where the universe is crowded;
 // inactives say where the farms are — the two questions people actually open a
@@ -171,4 +172,36 @@ export function describeSystem(players, { galaxy, system, statuses = [], univers
 	}
 
 	return rows.sort((a, b) => a.position - b.position);
+}
+
+// The player typed in the "locate" field, matched on the whole name so that
+// "Ely" does not light up somebody else's planets while the name is being
+// typed. Case and accents do not count, as everywhere else on the site.
+export function findPlayer(players, query) {
+	const wanted = normalizeForSearch(String(query ?? '').trim());
+	if (!wanted) return null;
+	return (players ?? []).find((player) => normalizeForSearch(player.name) === wanted) ?? null;
+}
+
+// Where a player lives, as the map needs it: the systems to mark, each with the
+// positions held there, in galaxy order.
+export function playerSystems(player) {
+	const systems = new Map();
+
+	for (const planet of player?.planets ?? []) {
+		const parsed = parseCoordinates(planet.coords);
+		if (!parsed) continue;
+
+		const key = `${parsed.galaxy}:${parsed.system}`;
+		let entry = systems.get(key);
+		if (!entry) {
+			entry = { key, galaxy: parsed.galaxy, system: parsed.system, planets: [] };
+			systems.set(key, entry);
+		}
+		entry.planets.push({ position: parsed.position, coords: formatCoordinates(parsed), moon: planet.moon });
+	}
+
+	return [...systems.values()]
+		.map((entry) => ({ ...entry, planets: entry.planets.sort((a, b) => a.position - b.position) }))
+		.sort((a, b) => a.galaxy - b.galaxy || a.system - b.system);
 }

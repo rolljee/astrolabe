@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest';
 
-import { axisTicks, buildHeatmap, describeSystem, heatLevel, HEAT_LEVELS } from './model';
+import {
+	axisTicks,
+	buildHeatmap,
+	describeSystem,
+	findPlayer,
+	heatLevel,
+	HEAT_LEVELS,
+	playerSystems,
+} from './model';
 
 const status = (over = {}) => ({
 	raw: '',
@@ -110,5 +118,38 @@ describe('heatLevel', () => {
 	it('keeps the top shade for a full system, and past it', () => {
 		expect(heatLevel(15)).toBe(HEAT_LEVELS);
 		expect(heatLevel(17)).toBe(HEAT_LEVELS);
+	});
+});
+
+describe('findPlayer', () => {
+	const players = [
+		{ id: '1', name: 'Élysée', planets: [] },
+		{ id: '2', name: 'Elysium', planets: [] },
+	];
+
+	it('matches the whole name, ignoring case and accents', () => {
+		expect(findPlayer(players, ' ELYSEE ')?.id).toBe('1');
+		expect(findPlayer(players, 'ely')).toBeNull();
+		expect(findPlayer(players, '')).toBeNull();
+	});
+});
+
+describe('playerSystems', () => {
+	it('groups the planets by system, in map order', () => {
+		const systems = playerSystems({
+			planets: [
+				{ coords: '2:10:8', moon: false },
+				{ coords: '1:5:9', moon: true },
+				{ coords: '2:10:3', moon: false },
+				{ coords: 'nope', moon: false },
+			],
+		});
+		expect(systems.map(({ key }) => key)).toEqual(['1:5', '2:10']);
+		expect(systems[1].planets.map(({ position }) => position)).toEqual([3, 8]);
+		expect(systems[0].planets[0]).toMatchObject({ coords: '1:5:9', moon: true });
+	});
+
+	it('is empty without a player', () => {
+		expect(playerSystems(null)).toEqual([]);
 	});
 });

@@ -161,6 +161,32 @@ describe('<GalaxyMap />', () => {
 		expect(rows.getAllByText('[TWA]')).toHaveLength(2);
 	});
 
+	it('marks the systems of a located player and lists them', async () => {
+		const user = userEvent.setup();
+		renderView(<GalaxyMap />, { lang: 'en' });
+		await screen.findByLabelText(/^1:1 —/);
+
+		const field = screen.getByLabelText('Locate a player');
+		await user.type(field, 'ely');
+		// A partial name marks nobody.
+		expect(screen.getByText('No player by that name in this universe.')).toBeInTheDocument();
+		expect(cell('1:1')).not.toHaveClass('is-marked');
+
+		await user.clear(field);
+		await user.type(field, 'elysee');
+
+		expect(cell('1:1')).toHaveClass('is-marked');
+		expect(cell('2:3')).toHaveClass('is-faded');
+		expect(screen.getByText('2 planet(s) in 1 system(s)')).toBeInTheDocument();
+
+		await user.click(screen.getByRole('button', { name: /^1:1\s*:4/ }));
+		expect(screen.getByText('System 1:1')).toBeInTheDocument();
+
+		await user.click(screen.getByRole('button', { name: /Clear/ }));
+		expect(cell('1:1')).not.toHaveClass('is-marked');
+		expect(cell('2:3')).not.toHaveClass('is-faded');
+	});
+
 	it('still draws the map when the universe size is unavailable', async () => {
 		fetchServerData.mockRejectedValue(new Error('nope'));
 		renderView(<GalaxyMap />, { lang: 'en' });

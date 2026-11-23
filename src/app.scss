@@ -2134,6 +2134,11 @@ input::placeholder {
 }
 
 .gm-map {
+	// Tall rows: seven galaxies are only seven strips, so height is cheap and it
+	// is what makes the shades readable at a glance.
+	--gm-cell-w: 15px;
+	--gm-cell-h: 40px;
+
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
@@ -2174,14 +2179,15 @@ input::placeholder {
 
 .gm-cells {
 	display: grid;
-	grid-template-columns: repeat(var(--gm-systems), 12px);
+	grid-template-columns: repeat(var(--gm-systems), var(--gm-cell-w));
 	gap: 2px;
 }
 
 .gm-cell {
 	appearance: none;
+	position: relative;
 	padding: 0;
-	height: 18px;
+	height: var(--gm-cell-h);
 	border: 1px solid transparent;
 	border-radius: 1px;
 	cursor: pointer;
@@ -2199,7 +2205,7 @@ input::placeholder {
 }
 
 .gm-axis {
-	height: 18px;
+	height: 20px;
 
 	.gm-cells {
 		align-items: center;
@@ -2236,6 +2242,33 @@ input::placeholder {
 }
 .gm-level-7 {
 	background: var(--heat-7);
+}
+
+// A located player: the rest of the map steps back and their systems get a
+// ring with a dot, readable on every shade from the darkest to white.
+.gm-cell.is-faded:not(.is-selected) {
+	opacity: 0.35;
+}
+
+.gm-cell.is-marked {
+	z-index: 1;
+	border-color: var(--sheet);
+	box-shadow:
+		0 0 0 2px var(--signal),
+		0 0 10px 2px var(--signal-line);
+
+	&::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+		background: var(--signal);
+		box-shadow: 0 0 0 1.5px var(--sheet);
+		transform: translate(-50%, -50%);
+	}
 }
 
 // Systems left out by the legend filter: still drawn, so the map keeps its
@@ -2291,6 +2324,82 @@ input::placeholder {
 	// The empty shade is barely off the page: a rule keeps its swatch findable.
 	&.gm-level-0 {
 		box-shadow: inset 0 0 0 1px var(--rule-strong);
+	}
+}
+
+.gm-locator {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.gm-locator-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 16px;
+}
+
+.gm-locator-field {
+	flex: 1 1 320px;
+	max-width: 560px;
+}
+
+.gm-locator-clear {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.gm-locator-result {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.gm-locator-who {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 10px;
+	margin: 0;
+}
+
+.gm-locator-marker {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: var(--signal);
+	box-shadow: 0 0 0 2px var(--signal-line);
+}
+
+.gm-locator-systems {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.gm-locator-system {
+	gap: 2px;
+	font-family: var(--font-figure);
+}
+
+.gm-locator-coords {
+	font-weight: 700;
+}
+
+.gm-locator-positions {
+	display: inline-flex;
+	align-items: center;
+	color: var(--ink-2);
+
+	span {
+		display: inline-flex;
+		align-items: center;
+		gap: 1px;
 	}
 }
 
@@ -2506,6 +2615,11 @@ input::placeholder {
 // On a phone the three amounts do not fit beside the row name: the name goes
 // on its own line above them.
 @media (max-width: 640px) {
+	.gm-map {
+		--gm-cell-w: 12px;
+		--gm-cell-h: 28px;
+	}
+
 	.cs-table,
 	.cs-table thead,
 	.cs-table tbody {

@@ -6,9 +6,10 @@ import { useApiData } from '../api/useApiData';
 import { useDataAge, useUniverse } from '../universe/UniverseContext';
 import { Group, NeedsUniverse, ToolGrid } from '../components/Layout';
 import { coordsAge } from '../Players/model';
-import { buildHeatmap, describeSystem } from './model';
+import { buildHeatmap, describeSystem, findPlayer, playerSystems } from './model';
 import HeatmapControls from './components/HeatmapControls';
 import HeatmapGrid from './components/HeatmapGrid';
+import PlayerLocator from './components/PlayerLocator';
 import SystemDetail from './components/SystemDetail';
 
 // A heatmap of where an universe's players actually live: one row per galaxy,
@@ -25,6 +26,8 @@ function GalaxyMap() {
 	const [system, setSystem] = useState(null);
 	// Shades picked in the legend; none means every system is shown.
 	const [shown, setShown] = useState([]);
+	// The player to locate, as typed; marked on the map once it names someone.
+	const [playerQuery, setPlayerQuery] = useState('');
 
 	const roster = useApiData(
 		selection.universe ? (signal) => fetchRoster(selection, { signal }) : null,
@@ -38,7 +41,10 @@ function GalaxyMap() {
 		[selection.universe, selection.lang],
 	);
 
-	useEffect(() => setSystem(null), [selection.universe, selection.lang]);
+	useEffect(() => {
+		setSystem(null);
+		setPlayerQuery('');
+	}, [selection.universe, selection.lang]);
 
 	function handleToggleLevel(level) {
 		setShown((prev) =>
@@ -71,6 +77,24 @@ function GalaxyMap() {
 				? describeSystem(roster.data.players, { ...system, statuses, ...selection })
 				: [],
 		[roster.data, system, statuses, selection],
+	);
+
+	// Looked up in the whole roster, not the status-filtered one: locating a
+	// player should not depend on whether they are counted in the colours.
+	const player = useMemo(
+		() => (roster.data ? findPlayer(roster.data.players, playerQuery) : null),
+		[roster.data, playerQuery],
+	);
+	const located = useMemo(() => playerSystems(player), [player]);
+	const marked = useMemo(() => new Set(located.map(({ key }) => key)), [located]);
+
+	// Players sorted by name for the suggestions.
+	const names = useMemo(
+		() =>
+			roster.data
+				? [...roster.data.players].sort((a, b) => a.name.localeCompare(b.name))
+				: [],
+		[roster.data],
 	);
 
 	const age = coordsAge(roster.data?.coordsTimestamp);
@@ -106,9 +130,19 @@ function GalaxyMap() {
 									onMetric={setMetric}
 									onToggleStatus={handleToggleStatus}
 								/>
+								<PlayerLocator
+									players={names}
+									query={playerQuery}
+									onQuery={setPlayerQuery}
+									player={player}
+									systems={located}
+									selected={system}
+									onSelect={setSystem}
+								/>
 								<HeatmapGrid
 									map={map}
 									metric={metric}
+									marked={player ? marked : null}
 									selected={system}
 									onSelect={setSystem}
 									shown={shown}

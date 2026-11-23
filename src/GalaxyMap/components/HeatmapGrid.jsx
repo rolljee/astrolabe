@@ -11,12 +11,16 @@ import { axisTicks, HEAT_BINS } from '../model';
 // also makes it reachable with the keyboard. The label doubles as the tooltip
 // so hovering and screen-reading say the same thing without a second DOM node
 // per cell, which matters at a few thousand of them.
-function HeatmapGrid({ map, metric, selected, onSelect, shown = [], onToggleLevel }) {
+//
+// `marked` holds the "galaxy:system" keys of a located player: those cells get
+// a ring and the rest of the map steps back, so a handful of planets can be
+// spotted among a few thousand cells without losing the heat underneath.
+function HeatmapGrid({ map, metric, marked = null, selected, onSelect, shown = [], onToggleLevel }) {
 	const { t } = useI18n();
 	const ticks = axisTicks(map.systems);
 
 	return (
-		<div className="gm-map">
+		<div className={`gm-map${marked ? ' is-locating' : ''}`}>
 			<div className="gm-scroll">
 				<div className="gm-rows">
 					{map.rows.map((row) => (
@@ -28,20 +32,22 @@ function HeatmapGrid({ map, metric, selected, onSelect, shown = [], onToggleLeve
 										selected &&
 										selected.galaxy === cell.galaxy &&
 										selected.system === cell.system;
-									const label = t(`gm.cell.${metric}`, {
+									const isMarked = marked?.has(`${cell.galaxy}:${cell.system}`) ?? false;
+									const base = t(`gm.cell.${metric}`, {
 										coords: `${cell.galaxy}:${cell.system}`,
 										planets: cell.planets,
 										players: cell.players,
 										inactive: cell.inactive,
 										moons: cell.moons,
 									});
+									const label = isMarked ? `${base} ${t('gm.cell.marked')}` : base;
 									return (
 										<button
 											key={cell.system}
 											type="button"
 											className={`gm-cell gm-level-${cell.level}${isSelected ? ' is-selected' : ''}${
 												shown.length && !shown.includes(cell.level) ? ' is-dimmed' : ''
-											}`}
+											}${isMarked ? ' is-marked' : ''}${marked && !isMarked ? ' is-faded' : ''}`}
 											aria-pressed={Boolean(isSelected)}
 											aria-label={label}
 											title={label}

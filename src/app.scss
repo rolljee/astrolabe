@@ -2365,12 +2365,59 @@ input::placeholder {
 
 .gm-locator-combo {
 	position: relative;
-	flex: 1 1 320px;
-	max-width: 560px;
+	flex: 1 1 280px;
+	max-width: 440px;
 }
 
 .gm-locator-field {
-	width: 100%;
+	flex: 1;
+	min-width: 0;
+
+	// The field has its own clear button beside it, in every browser.
+	input::-webkit-search-cancel-button {
+		appearance: none;
+	}
+}
+
+// Each field keeps its clear button beside it.
+.gm-locator-input {
+	display: flex;
+	align-items: flex-end;
+	gap: 6px;
+
+	.gm-locator-clear {
+		padding-bottom: 10px;
+	}
+}
+
+.gm-locator-spread {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 14px;
+	margin: 0;
+	font-family: var(--font-figure);
+	font-size: 13px;
+	color: var(--ink-2);
+}
+
+.gm-locator-more {
+	> summary {
+		font-size: 13px;
+	}
+
+	&[open] > summary {
+		margin-bottom: 6px;
+	}
+}
+
+.gm-locator-members {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	padding: 0;
+	list-style: none;
+	max-height: 240px;
+	overflow-y: auto;
 }
 
 // Suggestions under the locate field: a short sheet, not the browser's

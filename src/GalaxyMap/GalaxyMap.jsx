@@ -6,7 +6,15 @@ import { useApiData } from '../api/useApiData';
 import { useDataAge, useUniverse } from '../universe/UniverseContext';
 import { Group, NeedsUniverse, ToolGrid } from '../components/Layout';
 import { coordsAge } from '../Players/model';
-import { addCompared, buildHeatmap, comparePlayers, describeSystem, removeCompared } from './model';
+import {
+	addCompared,
+	buildHeatmap,
+	comparePlayers,
+	describeSystem,
+	listAlliances,
+	playerSlots,
+	removeCompared,
+} from './model';
 import HeatmapControls from './components/HeatmapControls';
 import HeatmapGrid from './components/HeatmapGrid';
 import PlayerLocator from './components/PlayerLocator';
@@ -26,9 +34,8 @@ function GalaxyMap() {
 	const [system, setSystem] = useState(null);
 	// Shades picked in the legend; none means every system is shown.
 	const [shown, setShown] = useState([]);
-	// The name being typed in the locate field, and the players already put on
-	// the map ({ id, slot }), each in its own colour.
-	const [playerQuery, setPlayerQuery] = useState('');
+	// The players and alliances put on the map ({ kind, id, slot }), each in
+	// its own colour.
 	const [compared, setCompared] = useState([]);
 
 	const roster = useApiData(
@@ -45,7 +52,6 @@ function GalaxyMap() {
 
 	useEffect(() => {
 		setSystem(null);
-		setPlayerQuery('');
 		setCompared([]);
 	}, [selection.universe, selection.lang]);
 
@@ -88,19 +94,15 @@ function GalaxyMap() {
 		() => comparePlayers(roster.data?.players, compared),
 		[roster.data, compared],
 	);
-	// Who is on the map, by id, for the system panel to tag their rows.
-	const slots = useMemo(
-		() => new Map(comparison.tracks.map(({ player, slot }) => [player.id, slot])),
-		[comparison],
-	);
+	// Who is on the map, by player id, for the system panel to tag their rows.
+	const slots = useMemo(() => playerSlots(comparison.tracks), [comparison]);
 
-	function handleAddPlayer(player) {
-		setCompared((prev) => addCompared(prev, player.id));
-		setPlayerQuery('');
+	function handleAdd(kind, id) {
+		setCompared((prev) => addCompared(prev, kind, id));
 	}
 
-	function handleRemovePlayer(id) {
-		setCompared((prev) => removeCompared(prev, id));
+	function handleRemove(kind, id) {
+		setCompared((prev) => removeCompared(prev, kind, id));
 	}
 
 	// Players sorted by name for the suggestions.
@@ -111,6 +113,7 @@ function GalaxyMap() {
 				: [],
 		[roster.data],
 	);
+	const alliances = useMemo(() => listAlliances(roster.data?.players), [roster.data]);
 
 	const age = coordsAge(roster.data?.coordsTimestamp);
 	useDataAge(age);
@@ -147,12 +150,12 @@ function GalaxyMap() {
 								/>
 								<PlayerLocator
 									players={names}
-									query={playerQuery}
-									onQuery={setPlayerQuery}
+									key={`${selection.universe}-${selection.lang}`}
+									alliances={alliances}
 									tracks={comparison.tracks}
 									shared={comparison.shared}
-									onAdd={handleAddPlayer}
-									onRemove={handleRemovePlayer}
+									onAdd={handleAdd}
+									onRemove={handleRemove}
 									onClear={() => setCompared([])}
 									selected={system}
 									onSelect={setSystem}

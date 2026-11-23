@@ -6,7 +6,7 @@ import { useApiData } from '../api/useApiData';
 import { useDataAge, useUniverse } from '../universe/UniverseContext';
 import { Group, NeedsUniverse, ToolGrid } from '../components/Layout';
 import { coordsAge } from '../Players/model';
-import { buildHeatmap, describeSystem, findPlayer, playerSystems } from './model';
+import { addCompared, buildHeatmap, comparePlayers, describeSystem, removeCompared } from './model';
 import HeatmapControls from './components/HeatmapControls';
 import HeatmapGrid from './components/HeatmapGrid';
 import PlayerLocator from './components/PlayerLocator';
@@ -26,8 +26,10 @@ function GalaxyMap() {
 	const [system, setSystem] = useState(null);
 	// Shades picked in the legend; none means every system is shown.
 	const [shown, setShown] = useState([]);
-	// The player to locate, as typed; marked on the map once it names someone.
+	// The name being typed in the locate field, and the players already put on
+	// the map ({ id, slot }), each in its own colour.
 	const [playerQuery, setPlayerQuery] = useState('');
+	const [compared, setCompared] = useState([]);
 
 	const roster = useApiData(
 		selection.universe ? (signal) => fetchRoster(selection, { signal }) : null,
@@ -44,6 +46,7 @@ function GalaxyMap() {
 	useEffect(() => {
 		setSystem(null);
 		setPlayerQuery('');
+		setCompared([]);
 	}, [selection.universe, selection.lang]);
 
 	function handleToggleLevel(level) {
@@ -81,12 +84,24 @@ function GalaxyMap() {
 
 	// Looked up in the whole roster, not the status-filtered one: locating a
 	// player should not depend on whether they are counted in the colours.
-	const player = useMemo(
-		() => (roster.data ? findPlayer(roster.data.players, playerQuery) : null),
-		[roster.data, playerQuery],
+	const comparison = useMemo(
+		() => comparePlayers(roster.data?.players, compared),
+		[roster.data, compared],
 	);
-	const located = useMemo(() => playerSystems(player), [player]);
-	const marked = useMemo(() => new Set(located.map(({ key }) => key)), [located]);
+	// Who is on the map, by id, for the system panel to tag their rows.
+	const slots = useMemo(
+		() => new Map(comparison.tracks.map(({ player, slot }) => [player.id, slot])),
+		[comparison],
+	);
+
+	function handleAddPlayer(player) {
+		setCompared((prev) => addCompared(prev, player.id));
+		setPlayerQuery('');
+	}
+
+	function handleRemovePlayer(id) {
+		setCompared((prev) => removeCompared(prev, id));
+	}
 
 	// Players sorted by name for the suggestions.
 	const names = useMemo(
@@ -134,15 +149,18 @@ function GalaxyMap() {
 									players={names}
 									query={playerQuery}
 									onQuery={setPlayerQuery}
-									player={player}
-									systems={located}
+									tracks={comparison.tracks}
+									shared={comparison.shared}
+									onAdd={handleAddPlayer}
+									onRemove={handleRemovePlayer}
+									onClear={() => setCompared([])}
 									selected={system}
 									onSelect={setSystem}
 								/>
 								<HeatmapGrid
 									map={map}
 									metric={metric}
-									marked={player ? marked : null}
+									marks={comparison.tracks.length ? comparison.marks : null}
 									selected={system}
 									onSelect={setSystem}
 									shown={shown}
@@ -171,7 +189,7 @@ function GalaxyMap() {
 					</NeedsUniverse>
 				</Group>
 			}
-			report={map && <SystemDetail system={system} rows={rows} />}
+			report={map && <SystemDetail system={system} rows={rows} slots={slots} />}
 		/>
 	);
 }

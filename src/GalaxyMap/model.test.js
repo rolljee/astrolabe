@@ -8,6 +8,7 @@ import {
 	heatLevel,
 	HEAT_LEVELS,
 	playerSystems,
+	suggestPlayers,
 } from './model';
 
 const status = (over = {}) => ({
@@ -131,6 +132,33 @@ describe('findPlayer', () => {
 		expect(findPlayer(players, ' ELYSEE ')?.id).toBe('1');
 		expect(findPlayer(players, 'ely')).toBeNull();
 		expect(findPlayer(players, '')).toBeNull();
+	});
+});
+
+describe('suggestPlayers', () => {
+	const players = [
+		{ id: '1', name: 'Élysée' },
+		{ id: '2', name: 'Elysium' },
+		{ id: '3', name: 'Bely' },
+		{ id: '4', name: 'Admiral Ara' },
+	];
+
+	it('puts the names starting with the query first, then those containing it', () => {
+		const names = suggestPlayers(players, 'ely').map(({ player }) => player.name);
+		expect(names).toEqual(['Élysée', 'Elysium', 'Bely']);
+	});
+
+	it('locates the match in the name, accents included', () => {
+		const [first] = suggestPlayers(players, 'LYS');
+		expect(first.player.name).toBe('Élysée');
+		expect('Élysée'.slice(first.match.start, first.match.end)).toBe('lys');
+		const [ara] = suggestPlayers(players, 'ara');
+		expect('Admiral Ara'.slice(ara.match.start, ara.match.end)).toBe('Ara');
+	});
+
+	it('suggests nothing for an empty query and caps the list', () => {
+		expect(suggestPlayers(players, '  ')).toEqual([]);
+		expect(suggestPlayers(players, 'e', 2)).toHaveLength(2);
 	});
 });
 

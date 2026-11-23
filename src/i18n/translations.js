@@ -269,7 +269,8 @@ export const translations = {
 		'gm.detail.moon': 'Lune',
 
 		'gm.player.label': 'Situer un joueur',
-		'gm.player.placeholder': 'Nom exact du joueur',
+		'gm.player.placeholder': 'Tape le début de son nom',
+		'gm.player.suggestions': 'Joueurs correspondants',
 		'gm.player.clear': 'Effacer',
 		'gm.player.none': 'Aucun joueur de ce nom dans cet univers.',
 		'gm.player.unplaced': "pas encore placé sur la carte (l'annuaire a quelques jours de retard)",
@@ -785,7 +786,8 @@ export const translations = {
 		'gm.detail.moon': 'Moon',
 
 		'gm.player.label': 'Locate a player',
-		'gm.player.placeholder': "Player's exact name",
+		'gm.player.placeholder': 'Start typing a name',
+		'gm.player.suggestions': 'Matching players',
 		'gm.player.clear': 'Clear',
 		'gm.player.none': 'No player by that name in this universe.',
 		'gm.player.unplaced': 'not on the map yet (the roster lags a few days behind)',

@@ -166,14 +166,24 @@ describe('<GalaxyMap />', () => {
 		renderView(<GalaxyMap />, { lang: 'en' });
 		await screen.findByLabelText(/^1:1 —/);
 
-		const field = screen.getByLabelText('Locate a player');
-		await user.type(field, 'ely');
-		// A partial name marks nobody.
+		const field = screen.getByRole('combobox', { name: 'Locate a player' });
+		// Nothing is suggested before typing.
+		await user.click(field);
+		expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+
+		await user.type(field, 'zz');
 		expect(screen.getByText('No player by that name in this universe.')).toBeInTheDocument();
-		expect(cell('1:1')).not.toHaveClass('is-marked');
 
 		await user.clear(field);
-		await user.type(field, 'elysee');
+		await user.type(field, 'ely');
+		// A partial name marks nobody, but offers the matching names.
+		expect(cell('1:1')).not.toHaveClass('is-marked');
+		const options = within(screen.getByRole('listbox')).getAllByRole('option');
+		expect(options.map((option) => option.textContent)).toEqual(['Élysée[TWA]', 'Elysium']);
+
+		await user.keyboard('{ArrowDown}{Enter}');
+		expect(field).toHaveValue('Élysée');
+		expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
 
 		expect(cell('1:1')).toHaveClass('is-marked');
 		expect(cell('2:3')).toHaveClass('is-faded');
@@ -185,6 +195,12 @@ describe('<GalaxyMap />', () => {
 		await user.click(screen.getByRole('button', { name: /Clear/ }));
 		expect(cell('1:1')).not.toHaveClass('is-marked');
 		expect(cell('2:3')).not.toHaveClass('is-faded');
+
+		// Picking with the mouse works the same way.
+		await user.type(field, 'sleep');
+		await user.click(screen.getByRole('option', { name: 'Sleeper' }));
+		expect(field).toHaveValue('Sleeper');
+		expect(cell('2:3')).toHaveClass('is-marked');
 	});
 
 	it('still draws the map when the universe size is unavailable', async () => {

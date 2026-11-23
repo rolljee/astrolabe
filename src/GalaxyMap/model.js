@@ -249,47 +249,174 @@ export function playerSystems(player) {
 		.sort((a, b) => a.galaxy - b.galaxy || a.system - b.system);
 }
 
-// How many players can be put on the map at once. Each one gets a colour of
-// its own (`--gm-mark-1` to `--gm-mark-5`), and past five the colours stop
-// being told apart on the heat ramp.
+// How many entries (players or alliances) can be put on the map at once. Each
+// one gets a colour of its own (`--gm-mark-1` to `--gm-mark-5`), and past five
+// the colours stop being told apart on the heat ramp. An alliance takes a
+// single colour however many members it has: that is what keeps a hundred-
+// member alliance readable next to a lone player.
 export const MAX_COMPARED = 5;
 
-// The players put on the map, as `{ id, slot }`: the slot is the player's
-// colour. A newcomer takes the first free slot, so removing someone never
-// repaints the players left on the map.
-export function addCompared(list, id) {
-	if (list.some((entry) => entry.id === id) || list.length >= MAX_COMPARED) return list;
+// The entries put on the map, as `{ kind, id, slot }` (kind is "player" or
+// "alliance"): the slot is the entry's colour. A newcomer takes the first free
+// slot, so removing one never repaints the others.
+export function addCompared(list, kind, id) {
+	if (list.some((entry) => entry.kind === kind && entry.id === id) || list.length >= MAX_COMPARED) {
+		return list;
+	}
 	const taken = new Set(list.map(({ slot }) => slot));
 	let slot = 0;
 	while (taken.has(slot)) slot += 1;
-	return [...list, { id, slot }];
+	return [...list, { kind, id, slot }];
 }
 
-export function removeCompared(list, id) {
-	return list.filter((entry) => entry.id !== id);
+export function removeCompared(list, kind, id) {
+	return list.filter((entry) => !(entry.kind === kind && entry.id === id));
 }
 
-// Everything the map needs to compare the players put on it:
-// - `tracks`, one per player still in the roster, with their systems;
+// The alliances of a roster, built from the players' own alliance field (the
+// roster has no separate list), with their member count, by tag.
+export function listAlliances(players) {
+	const alliances = new Map();
+	for (const player of players ?? []) {
+		const { alliance } = player;
+		if (!alliance) continue;
+		let entry = alliances.get(alliance.id);
+		if (!entry) {
+			entry = { id: alliance.id, tag: alliance.tag, name: alliance.name, members: 0 };
+			alliances.set(alliance.id, entry);
+		}
+		entry.members += 1;
+	}
+	return [...alliances.values()].sort((a, b) => a.tag.localeCompare(b.tag));
+}
+
+// The alliances offered under the alliance field: tags that start with what
+// was typed, then names that start with it, then anything that merely
+// contains it; the biggest first within each group, since a big alliance is
+// the one people come to look for. `match` says where to underline, in the
+// tag or the name.
+export function suggestAlliances(alliances, query, limit = 8) {
+	const wanted = normalizeForSearch(String(query ?? '').trim());
+	if (!wanted) return [];
+
+	const ranked = [];
+	for (const alliance of alliances ?? []) {
+		const tag = matchRange(alliance.tag, wanted);
+		const name = matchRange(alliance.name, wanted);
+		if (!tag && !name) continue;
+		let rank = 3;
+		if (tag?.start === 0) rank = 0;
+		else if (name?.start === 0) rank = 1;
+		else if (tag) rank = 2;
+		const field = tag && (rank !== 1 || !name) ? 'tag' : 'name';
+		ranked.push({ alliance, rank, match: { field, ...(field === 'tag' ? tag : name) } });
+	}
+
+	return ranked
+		.sort(
+			(a, b) =>
+				a.rank - b.rank ||
+				b.alliance.members - a.alliance.members ||
+				a.alliance.tag.localeCompare(b.alliance.tag),
+		)
+		.slice(0, limit)
+		.map(({ alliance, match }) => ({ alliance, match }));
+}
+
+// The alliance typed in full, by tag or name; case and accents do not count.
+export function findAlliance(alliances, query) {
+	const wanted = normalizeForSearch(String(query ?? '').trim());
+	if (!wanted) return null;
+	return (
+		(alliances ?? []).find(
+			(alliance) =>
+				normalizeForSearch(alliance.tag) === wanted || normalizeForSearch(alliance.name) === wanted,
+		) ?? null
+	);
+}
+
+// Where a group of players lives, merged: the systems to mark, each with the
+// positions held there and who holds them.
+function groupSystems(members) {
+	const systems = new Map();
+	for (const player of members) {
+		for (const entry of playerSystems(player)) {
+			let merged = systems.get(entry.key);
+			if (!merged) {
+				merged = { ...entry, planets: [] };
+				systems.set(entry.key, merged);
+			}
+			merged.planets.push(...entry.planets.map((planet) => ({ ...planet, owner: player.name })));
+		}
+	}
+	return [...systems.values()]
+		.map((entry) => ({ ...entry, planets: entry.planets.sort((a, b) => a.position - b.position) }))
+		.sort((a, b) => a.galaxy - b.galaxy || a.system - b.system);
+}
+
+// Planets per galaxy, for an alliance too spread out to list system by system.
+function galaxySpread(systems) {
+	const counts = new Map();
+	for (const { galaxy, planets } of systems) counts.set(galaxy, (counts.get(galaxy) ?? 0) + planets.length);
+	return [...counts.entries()].sort((a, b) => a[0] - b[0]).map(([galaxy, planets]) => ({ galaxy, planets }));
+}
+
+// Everything the map needs to compare the entries put on it:
+// - `tracks`, one per entry still in the roster, with their systems; an
+//   alliance's track leaves out the members also put on the map on their own,
+//   so they keep their own colour instead of "sharing" a system with their
+//   own alliance;
 // - `marks`, who to draw in each "galaxy:system" cell, as `{ slot, name }`;
-// - `shared`, the systems where at least two of them live, in map order, each
+// - `shared`, the systems where at least two entries live, in map order, each
 //   with who holds which positions there — the answer to "where do they meet".
 export function comparePlayers(players, compared) {
-	const byId = new Map((players ?? []).map((player) => [player.id, player]));
-	const tracks = compared
-		.map(({ id, slot }) => ({ player: byId.get(id), slot }))
-		.filter(({ player }) => player)
-		.map((track) => ({ ...track, systems: playerSystems(track.player) }));
+	const roster = players ?? [];
+	const byId = new Map(roster.map((player) => [player.id, player]));
+	const alone = new Set(
+		compared.filter(({ kind }) => kind !== 'alliance').map(({ id }) => id),
+	);
+
+	const tracks = [];
+	for (const { kind, id, slot } of compared) {
+		if (kind === 'alliance') {
+			const everyone = roster.filter((player) => player.alliance?.id === id);
+			if (!everyone.length) continue;
+			const members = everyone.filter((player) => !alone.has(player.id));
+			const { tag, name } = everyone[0].alliance;
+			const systems = groupSystems(members);
+			tracks.push({
+				kind,
+				key: `alliance:${id}`,
+				slot,
+				alliance: { id, tag, name },
+				label: `[${tag}]`,
+				members: [...everyone].sort((a, b) => a.name.localeCompare(b.name)),
+				systems,
+				spread: galaxySpread(systems),
+			});
+		} else {
+			const player = byId.get(id);
+			if (!player) continue;
+			tracks.push({
+				kind: 'player',
+				key: `player:${id}`,
+				slot,
+				player,
+				label: player.name,
+				systems: playerSystems(player),
+			});
+		}
+	}
 
 	const cells = new Map();
-	for (const { player, slot, systems } of tracks) {
-		for (const entry of systems) {
+	for (const track of tracks) {
+		for (const entry of track.systems) {
 			let cell = cells.get(entry.key);
 			if (!cell) {
 				cell = { key: entry.key, galaxy: entry.galaxy, system: entry.system, members: [] };
 				cells.set(entry.key, cell);
 			}
-			cell.members.push({ player, slot, planets: entry.planets });
+			cell.members.push({ key: track.key, label: track.label, slot: track.slot, planets: entry.planets });
 		}
 	}
 
@@ -298,7 +425,7 @@ export function comparePlayers(players, compared) {
 		cell.members.sort((a, b) => a.slot - b.slot);
 		marks.set(
 			cell.key,
-			cell.members.map(({ slot, player }) => ({ slot, name: player.name })),
+			cell.members.map(({ slot, label }) => ({ slot, name: label })),
 		);
 	}
 
@@ -307,4 +434,18 @@ export function comparePlayers(players, compared) {
 		.sort((a, b) => a.galaxy - b.galaxy || a.system - b.system);
 
 	return { tracks, marks, shared };
+}
+
+// The colour each player of the system panel carries: their own when they are
+// on the map, else their alliance's when it is.
+export function playerSlots(tracks) {
+	const slots = new Map();
+	for (const track of tracks) {
+		if (track.kind !== 'alliance') continue;
+		for (const player of track.members) slots.set(player.id, track.slot);
+	}
+	for (const track of tracks) {
+		if (track.kind === 'player') slots.set(track.player.id, track.slot);
+	}
+	return slots;
 }

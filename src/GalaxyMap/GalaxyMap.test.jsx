@@ -166,7 +166,7 @@ describe('<GalaxyMap />', () => {
 		renderView(<GalaxyMap />, { lang: 'en' });
 		await screen.findByLabelText(/^1:1 —/);
 
-		const field = screen.getByRole('combobox', { name: 'Locate players' });
+		const field = screen.getByRole('combobox', { name: 'Player' });
 		// Nothing is suggested before typing.
 		await user.click(field);
 		expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
@@ -209,7 +209,7 @@ describe('<GalaxyMap />', () => {
 		renderView(<GalaxyMap />, { lang: 'en' });
 		await screen.findByLabelText(/^1:1 —/);
 
-		const field = screen.getByRole('combobox', { name: 'Locate players' });
+		const field = screen.getByRole('combobox', { name: 'Player' });
 		await user.type(field, 'sleeper{Enter}');
 		expect(cell('2:3')).toHaveClass('is-marked');
 		expect(cell('2:3').style.getPropertyValue('--gm-mark')).toBe('var(--gm-mark-1)');
@@ -217,7 +217,7 @@ describe('<GalaxyMap />', () => {
 		await user.type(field, 'elysium{Enter}');
 		expect(cell('1:1').style.getPropertyValue('--gm-mark')).toBe('var(--gm-mark-2)');
 		// Nobody shares a system yet.
-		expect(screen.getByText(/none: these players share no system/)).toBeInTheDocument();
+		expect(screen.getByText('no shared system')).toBeInTheDocument();
 
 		// A player already on the map is not offered again.
 		await user.type(field, 'elysium');
@@ -228,7 +228,7 @@ describe('<GalaxyMap />', () => {
 		expect(cell('1:1')).toHaveClass('is-shared');
 		expect(cell('1:1')).toHaveAccessibleName(/home of Elysium, Élysée$/);
 		expect(cell('2:3')).toHaveClass('is-marked');
-		expect(screen.getByText('1 system(s) home to several of these players')).toBeInTheDocument();
+		expect(screen.getByText('1 system(s) where several entries of the map meet')).toBeInTheDocument();
 
 		// Removing a player keeps the colours of the others.
 		await user.click(screen.getByRole('button', { name: 'Remove Sleeper from the map' }));
@@ -237,6 +237,39 @@ describe('<GalaxyMap />', () => {
 
 		await user.click(screen.getByRole('button', { name: /Remove everyone/ }));
 		expect(cell('1:1')).not.toHaveClass('is-marked');
+	});
+
+	it('puts a whole alliance on the map in a single colour', async () => {
+		const user = userEvent.setup();
+		renderView(<GalaxyMap />, { lang: 'en' });
+		await screen.findByLabelText(/^1:1 —/);
+
+		const field = screen.getByRole('combobox', { name: 'Alliance' });
+		await user.type(field, 'wolf');
+		expect(
+			within(screen.getByRole('listbox', { name: 'Alliance' }))
+				.getAllByRole('option')
+				.map((option) => option.textContent),
+		).toEqual(['[TWA] The Wolf Army1 member(s)']);
+		await user.keyboard('{Enter}');
+
+		expect(field).toHaveValue('');
+		expect(cell('1:1')).toHaveClass('is-marked');
+		expect(cell('1:1')).toHaveAccessibleName(/home of \[TWA\]$/);
+		expect(cell('2:3')).toHaveClass('is-faded');
+		expect(screen.getByText('1 member(s), 2 planet(s) in 1 system(s)')).toBeInTheDocument();
+
+		await user.type(field, 'twa');
+		expect(screen.getByText('That alliance is already on the map.')).toBeInTheDocument();
+		await user.clear(field);
+
+		// A member put on the map on their own leaves the alliance's colour.
+		await user.click(screen.getByText('Members (1): add one on their own'));
+		await user.click(screen.getByRole('button', { name: /Élysée/ }));
+		expect(cell('1:1')).toHaveAccessibleName(/home of Élysée$/);
+		expect(cell('1:1')).not.toHaveClass('is-shared');
+		expect(cell('1:1').style.getPropertyValue('--gm-mark')).toBe('var(--gm-mark-2)');
+		expect(screen.getByText('no shared system')).toBeInTheDocument();
 	});
 
 	it('still draws the map when the universe size is unavailable', async () => {

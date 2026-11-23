@@ -1,11 +1,29 @@
-import React, { useId, useMemo, useState } from 'react';
-import { Moon, UserSearch, X } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Moon, Plus, Shield, UserSearch, X } from 'lucide-react';
 
 import { useI18n } from '../../i18n/I18nContext';
 import StatusBadges from '../../components/StatusBadges';
-import { MAX_COMPARED, findPlayer, suggestPlayers } from '../model';
+import {
+	MAX_COMPARED,
+	findAlliance,
+	findPlayer,
+	suggestAlliances,
+	suggestPlayers,
+} from '../model';
+import NameCombobox from './NameCombobox';
 
 const markStyle = (slot) => ({ '--gm-mark': `var(--gm-mark-${slot + 1})` });
+
+function Highlight({ text, match }) {
+	if (!match) return text;
+	return (
+		<>
+			{text.slice(0, match.start)}
+			<mark>{text.slice(match.start, match.end)}</mark>
+			{text.slice(match.end)}
+		</>
+	);
+}
 
 // One system as a chip: its coordinates, then the positions held there. A
 // shortcut to the system panel.
@@ -27,6 +45,7 @@ function SystemChip({ entry, positions, selected, onSelect }) {
 	);
 }
 
+// The positions held in a system; an alliance's say whose they are on hover.
 function Positions({ planets, slot = null }) {
 	const { t } = useI18n();
 	return (
@@ -35,7 +54,7 @@ function Positions({ planets, slot = null }) {
 				<span className="gm-locator-marker is-small" style={markStyle(slot)} aria-hidden="true" />
 			)}
 			{planets.map((planet) => (
-				<span key={planet.position}>
+				<span key={planet.position} title={planet.owner}>
 					:{planet.position}
 					{planet.moon && <Moon size={11} aria-label={t('gm.detail.moon')} />}
 				</span>
@@ -44,15 +63,122 @@ function Positions({ planets, slot = null }) {
 	);
 }
 
-// Put players on the map to compare where they live. Nothing is listed until a
-// name is being typed; then a short list of matching names opens under the
-// field (an ARIA combobox: arrows move, Enter picks, Escape closes). Picking a
-// name adds that player in a colour of their own, up to MAX_COMPARED; each one
-// lists their systems, and the systems two of them share are listed apart.
+function SystemChips({ systems, selected, onSelect }) {
+	return (
+		<ul className="gm-locator-systems">
+			{systems.map((entry) => (
+				<SystemChip
+					key={entry.key}
+					entry={entry}
+					positions={<Positions planets={entry.planets} />}
+					selected={selected}
+					onSelect={onSelect}
+				/>
+			))}
+		</ul>
+	);
+}
+
+function RemoveButton({ label, onClick }) {
+	const { t } = useI18n();
+	return (
+		<button
+			type="button"
+			className="btn-text gm-locator-remove"
+			aria-label={t('gm.player.remove', { name: label })}
+			title={t('gm.player.remove', { name: label })}
+			onClick={onClick}
+		>
+			<X size={15} aria-hidden="true" />
+		</button>
+	);
+}
+
+function PlayerTrack({ track, selected, onSelect, onRemove }) {
+	const { t } = useI18n();
+	const { player, slot, systems } = track;
+	const planets = systems.reduce((total, entry) => total + entry.planets.length, 0);
+	return (
+		<div className="gm-locator-result">
+			<p className="gm-locator-who">
+				<span className="gm-locator-marker" style={markStyle(slot)} aria-hidden="true" />
+				<span className="gm-detail-name">{player.name}</span>
+				{player.alliance && <span className="pl-row-alliance">[{player.alliance.tag}]</span>}
+				<StatusBadges status={player.status} />
+				<span className="help">
+					{systems.length === 0
+						? t('gm.player.unplaced')
+						: t('gm.player.summary', { planets, systems: systems.length })}
+				</span>
+				<RemoveButton label={player.name} onClick={onRemove} />
+			</p>
+			{systems.length > 0 && <SystemChips systems={systems} selected={selected} onSelect={onSelect} />}
+		</div>
+	);
+}
+
+// An alliance can hold hundreds of planets: it shows its spread per galaxy, and
+// keeps its systems and members folded away. Any member can be put on the map
+// on their own, in a colour of their own, to single them out.
+function AllianceTrack({ track, full, alone, selected, onSelect, onRemove, onAddPlayer }) {
+	const { t } = useI18n();
+	const { alliance, slot, systems, members, spread } = track;
+	const planets = systems.reduce((total, entry) => total + entry.planets.length, 0);
+	return (
+		<div className="gm-locator-result">
+			<p className="gm-locator-who">
+				<span className="gm-locator-marker" style={markStyle(slot)} aria-hidden="true" />
+				<span className="gm-detail-name">[{alliance.tag}]</span>
+				<span>{alliance.name}</span>
+				<span className="help">
+					{t('gm.alliance.summary', { members: members.length, planets, systems: systems.length })}
+				</span>
+				<RemoveButton label={`[${alliance.tag}]`} onClick={onRemove} />
+			</p>
+			{spread.length > 0 && (
+				<p className="gm-locator-spread" aria-label={t('gm.alliance.spread')}>
+					{spread.map(({ galaxy, planets: count }) => (
+						<span key={galaxy} className="gm-locator-spread-item">
+							<span className="gm-locator-coords">G{galaxy}</span> {count}
+						</span>
+					))}
+				</p>
+			)}
+			{systems.length > 0 && (
+				<details className="disclosure gm-locator-more">
+					<summary>{t('gm.alliance.systems', { systems: systems.length })}</summary>
+					<SystemChips systems={systems} selected={selected} onSelect={onSelect} />
+				</details>
+			)}
+			<details className="disclosure gm-locator-more">
+				<summary>{t('gm.alliance.members', { members: members.length })}</summary>
+				<ul className="gm-locator-members">
+					{members.map((player) => (
+						<li key={player.id}>
+							<button
+								type="button"
+								className="chip"
+								disabled={full || alone.has(player.id)}
+								title={t('gm.alliance.single', { name: player.name })}
+								onClick={() => onAddPlayer(player)}
+							>
+								<Plus size={13} aria-hidden="true" /> {player.name}
+							</button>
+						</li>
+					))}
+				</ul>
+			</details>
+		</div>
+	);
+}
+
+// Put players and alliances on the map to compare where they live: two fields,
+// so a big alliance takes one colour instead of filling the map with its
+// members. Up to MAX_COMPARED entries in all; the systems two of them share
+// are listed apart.
 function PlayerLocator({
 	players,
-	query,
-	onQuery,
+	alliances,
 	tracks,
 	shared,
 	onAdd,
@@ -62,129 +188,81 @@ function PlayerLocator({
 	onSelect,
 }) {
 	const { t } = useI18n();
-	const listId = useId();
-	const [open, setOpen] = useState(false);
-	const [active, setActive] = useState(-1);
-	const typed = query.trim().length > 0;
 	const full = tracks.length >= MAX_COMPARED;
 
-	// The players already on the map are not offered again.
-	const available = useMemo(() => {
-		const taken = new Set(tracks.map(({ player }) => player.id));
-		return players.filter((player) => !taken.has(player.id));
-	}, [players, tracks]);
-	const suggestions = useMemo(() => suggestPlayers(available, query), [available, query]);
-	const expanded = open && suggestions.length > 0;
-	const optionId = (index) => `${listId}-${index}`;
+	// What is already on the map is not offered again.
+	const alone = useMemo(
+		() => new Set(tracks.filter(({ kind }) => kind === 'player').map(({ player }) => player.id)),
+		[tracks],
+	);
+	const onMap = useMemo(
+		() =>
+			new Set(tracks.filter(({ kind }) => kind === 'alliance').map(({ alliance }) => alliance.id)),
+		[tracks],
+	);
+	const freePlayers = useMemo(() => players.filter((p) => !alone.has(p.id)), [players, alone]);
+	const freeAlliances = useMemo(() => alliances.filter((a) => !onMap.has(a.id)), [alliances, onMap]);
 
-	const type = (value) => {
-		onQuery(value);
-		setOpen(true);
-		setActive(-1);
-	};
-
-	const pick = (entry) => {
-		onAdd(entry);
-		setOpen(false);
-		setActive(-1);
-	};
-
-	const handleKeyDown = (event) => {
-		if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-			if (!suggestions.length) return;
-			event.preventDefault();
-			setOpen(true);
-			const step = event.key === 'ArrowDown' ? 1 : -1;
-			setActive((current) => (current + step + suggestions.length) % suggestions.length);
-		} else if (event.key === 'Enter') {
-			// The highlighted name, the only one left, or a name typed in full.
-			const entry =
-				(expanded ? suggestions[active]?.player : null) ??
-				(suggestions.length === 1 ? suggestions[0].player : null) ??
-				findPlayer(available, query);
-			if (entry) {
-				event.preventDefault();
-				pick(entry);
-			}
-		} else if (event.key === 'Escape' && expanded) {
-			event.preventDefault();
-			setOpen(false);
-			setActive(-1);
-		}
-	};
+	const placeholder = (key) => t(full ? 'gm.player.full' : key, { max: MAX_COMPARED });
 
 	return (
 		<div className="gm-locator">
 			<div className="gm-locator-row">
-				<div className="gm-locator-combo">
-					<label className="field gm-locator-field">
-						<span className="field-label">
-							<UserSearch size={18} aria-hidden="true" />
-							{t('gm.player.label')}
-						</span>
-						<input
-							type="search"
-							role="combobox"
-							autoComplete="off"
-							spellCheck={false}
-							aria-autocomplete="list"
-							aria-controls={listId}
-							aria-expanded={expanded}
-							aria-activedescendant={expanded && active >= 0 ? optionId(active) : undefined}
-							placeholder={t(full ? 'gm.player.full' : 'gm.player.placeholder', {
-								max: MAX_COMPARED,
-							})}
-							disabled={full}
-							value={query}
-							onChange={(event) => type(event.target.value)}
-							onKeyDown={handleKeyDown}
-							onFocus={() => setOpen(true)}
-							onBlur={() => setOpen(false)}
-						/>
-					</label>
-					<ul
-						id={listId}
-						role="listbox"
-						aria-label={t('gm.player.suggestions')}
-						className="gm-suggest"
-						hidden={!expanded}
-					>
-						{expanded &&
-							suggestions.map(({ player: entry, match }, index) => (
-								<li
-									key={entry.id}
-									id={optionId(index)}
-									role="option"
-									aria-selected={index === active}
-									className={`gm-suggest-option${index === active ? ' is-active' : ''}`}
-									// mousedown, not click: the field would blur first and close the list.
-									onMouseDown={(event) => {
-										event.preventDefault();
-										pick(entry);
-									}}
-									onMouseEnter={() => setActive(index)}
-								>
+				<NameCombobox
+					label={t('gm.player.label')}
+					Icon={UserSearch}
+					placeholder={placeholder('gm.player.placeholder')}
+					disabled={full}
+					suggest={(query) =>
+						suggestPlayers(freePlayers, query).map(({ player, match }) => ({
+							key: player.id,
+							item: player,
+							content: (
+								<>
 									<span className="gm-suggest-name">
-										{entry.name.slice(0, match.start)}
-										<mark>{entry.name.slice(match.start, match.end)}</mark>
-										{entry.name.slice(match.end)}
+										<Highlight text={player.name} match={match} />
 									</span>
-									{entry.alliance && (
-										<span className="gm-suggest-tag">[{entry.alliance.tag}]</span>
+									{player.alliance && (
+										<span className="gm-suggest-tag">[{player.alliance.tag}]</span>
 									)}
-								</li>
-							))}
-					</ul>
-				</div>
-				{typed && (
-					<button
-						type="button"
-						className="btn-text gm-locator-clear"
-						onClick={() => type('')}
-					>
-						<X size={15} aria-hidden="true" /> {t('gm.player.clear')}
-					</button>
-				)}
+								</>
+							),
+						}))
+					}
+					findExact={(query) => findPlayer(freePlayers, query)}
+					missing={(query) =>
+						findPlayer(players, query) ? t('gm.player.already') : t('gm.player.none')
+					}
+					onPick={(player) => onAdd('player', player.id)}
+				/>
+				<NameCombobox
+					label={t('gm.alliance.label')}
+					Icon={Shield}
+					placeholder={placeholder('gm.alliance.placeholder')}
+					disabled={full}
+					suggest={(query) =>
+						suggestAlliances(freeAlliances, query).map(({ alliance, match }) => ({
+							key: alliance.id,
+							item: alliance,
+							content: (
+								<>
+									<span className="gm-suggest-name">
+										[<Highlight text={alliance.tag} match={match.field === 'tag' ? match : null} />]{' '}
+										<Highlight text={alliance.name} match={match.field === 'name' ? match : null} />
+									</span>
+									<span className="gm-suggest-tag">
+										{t('gm.alliance.count', { members: alliance.members })}
+									</span>
+								</>
+							),
+						}))
+					}
+					findExact={(query) => findAlliance(freeAlliances, query)}
+					missing={(query) =>
+						findAlliance(alliances, query) ? t('gm.alliance.already') : t('gm.alliance.none')
+					}
+					onPick={(alliance) => onAdd('alliance', alliance.id)}
+				/>
 				{tracks.length > 1 && (
 					<button type="button" className="btn-text gm-locator-clear" onClick={onClear}>
 						<X size={15} aria-hidden="true" /> {t('gm.player.clearAll')}
@@ -192,57 +270,32 @@ function PlayerLocator({
 				)}
 			</div>
 
-			{typed && suggestions.length === 0 && (
-				<p className="help">
-					{findPlayer(players, query) ? t('gm.player.already') : t('gm.player.none')}
-				</p>
+			{tracks.length === 0 && <p className="help">{t('gm.player.hint', { max: MAX_COMPARED })}</p>}
+
+			{tracks.map((track) =>
+				track.kind === 'alliance' ? (
+					<AllianceTrack
+						key={track.key}
+						track={track}
+						full={full}
+						alone={alone}
+						selected={selected}
+						onSelect={onSelect}
+						onRemove={() => onRemove('alliance', track.alliance.id)}
+						onAddPlayer={(player) => onAdd('player', player.id)}
+					/>
+				) : (
+					<PlayerTrack
+						key={track.key}
+						track={track}
+						selected={selected}
+						onSelect={onSelect}
+						onRemove={() => onRemove('player', track.player.id)}
+					/>
+				),
 			)}
-			{tracks.length === 0 && !typed && <p className="help">{t('gm.player.hint', { max: MAX_COMPARED })}</p>}
 
-			{tracks.map(({ player, slot, systems }) => {
-				const planets = systems.reduce((total, entry) => total + entry.planets.length, 0);
-				return (
-					<div className="gm-locator-result" key={player.id}>
-						<p className="gm-locator-who">
-							<span className="gm-locator-marker" style={markStyle(slot)} aria-hidden="true" />
-							<span className="gm-detail-name">{player.name}</span>
-							{player.alliance && (
-								<span className="pl-row-alliance">[{player.alliance.tag}]</span>
-							)}
-							<StatusBadges status={player.status} />
-							<span className="help">
-								{systems.length === 0
-									? t('gm.player.unplaced')
-									: t('gm.player.summary', { planets, systems: systems.length })}
-							</span>
-							<button
-								type="button"
-								className="btn-text gm-locator-remove"
-								aria-label={t('gm.player.remove', { name: player.name })}
-								title={t('gm.player.remove', { name: player.name })}
-								onClick={() => onRemove(player.id)}
-							>
-								<X size={15} aria-hidden="true" />
-							</button>
-						</p>
-						{systems.length > 0 && (
-							<ul className="gm-locator-systems">
-								{systems.map((entry) => (
-									<SystemChip
-										key={entry.key}
-										entry={entry}
-										positions={<Positions planets={entry.planets} />}
-										selected={selected}
-										onSelect={onSelect}
-									/>
-								))}
-							</ul>
-						)}
-					</div>
-				);
-			})}
-
-			{/* Where they meet: only worth a section once two players are compared. */}
+			{/* Where they meet: only worth a section once two entries are compared. */}
 			{tracks.length > 1 && (
 				<div className="gm-locator-result gm-locator-shared" aria-live="polite">
 					<p className="gm-locator-who">
@@ -259,8 +312,8 @@ function PlayerLocator({
 								<SystemChip
 									key={entry.key}
 									entry={entry}
-									positions={entry.members.map(({ player, slot, planets }) => (
-										<Positions key={player.id} planets={planets} slot={slot} />
+									positions={entry.members.map(({ key, slot, planets }) => (
+										<Positions key={key} planets={planets} slot={slot} />
 									))}
 									selected={selected}
 									onSelect={onSelect}
